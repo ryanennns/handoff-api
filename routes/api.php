@@ -27,6 +27,9 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('callback', function () {
             $googleUser = Socialite::driver('google')->user();
 
+            \Illuminate\Support\Facades\Log::info('Google User Data:', [
+                'user' => json_encode($googleUser),
+            ]);
             $user = User::updateOrCreate([
                 'google_id' => $googleUser->id,
             ], [
