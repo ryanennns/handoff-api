@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
-Route::get('/', function() {
+Route::get('/', function () {
     return response()->json(['message' => 'hello world']);
 });
 
@@ -27,16 +27,14 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('callback', function () {
             $googleUser = Socialite::driver('google')->user();
 
-            \Illuminate\Support\Facades\Log::info('Google User Data:', [
-                'user' => json_encode($googleUser),
-            ]);
-            $user = User::updateOrCreate([
+            $user = User::query()->updateOrCreate([
                 'google_id' => $googleUser->id,
             ], [
                 'name'                 => $googleUser->name,
                 'email'                => $googleUser->email,
                 'google_token'         => $googleUser->token,
                 'google_refresh_token' => $googleUser->refreshToken,
+                'google_id'            => $googleUser->id,
             ]);
 
             Auth::login($user);
