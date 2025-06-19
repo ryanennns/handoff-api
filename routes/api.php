@@ -19,7 +19,9 @@ Route::get('/user', function (Request $request) {
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
         Route::get('redirect', function () {
-            return Socialite::driver('google')->redirect();
+            return Socialite::driver('google')
+                ->scopes(['openid', 'profile', 'email'])
+                ->redirect();
         });
 
         Route::get('callback', function () {
