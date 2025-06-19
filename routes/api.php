@@ -5,6 +5,7 @@ use App\Http\Controllers\RegisterController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -29,6 +30,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
             $token = $googleUser->token;
             $id = $googleUser->getId();
+            Log::info('Google User Info', [
+                'id' => $id,
+                'name' => $googleUser->name,
+                'email' => $googleUser->getEmail(),
+                'token' => $token,
+            ]);
             $user = User::query()->updateOrCreate([
                 'google_id' => $googleUser->getId(),
             ], [
