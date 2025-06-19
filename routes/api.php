@@ -31,11 +31,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
             $token = $googleUser->token;
             $id = $googleUser->getId();
             Log::info('Google User Info', [
-                'id' => $id,
-                'name' => $googleUser->name,
+                'id'    => $id,
+                'name'  => $googleUser->name,
                 'email' => $googleUser->getEmail(),
                 'token' => $token,
             ]);
+
             $user = User::query()->updateOrCreate([
                 'google_id' => $googleUser->getId(),
             ], [
@@ -48,7 +49,8 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
             Auth::login($user);
 
-            return redirect('http://127.0.0.1:5173');
+            $user->tokens()->delete();
+            return redirect('http://127.0.0.1:5173/dashboard&token=' . $user->createToken('auth_token')->plainTextToken);
         });
     });
 
