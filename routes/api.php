@@ -17,11 +17,11 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
-        Route::get('/redirect', function () {
+        Route::get('redirect', function () {
             return Socialite::driver('google')->redirect();
         });
 
-        Route::get('/auth/callback', function () {
+        Route::get('callback', function () {
             $githubUser = Socialite::driver('github')->user();
 
             $user = User::updateOrCreate([
