@@ -50,7 +50,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
             Auth::login($user);
 
             $user->tokens()->delete();
-            return redirect('http://127.0.0.1:5173/dashboard&token=' . $user->createToken('auth_token')->plainTextToken);
+            return redirect('http://127.0.0.1:5173/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
         });
     });
 
