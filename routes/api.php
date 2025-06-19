@@ -27,14 +27,16 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('callback', function () {
             $googleUser = Socialite::driver('google')->user();
 
+            $token = $googleUser->token;
+            $id = $googleUser->getId();
             $user = User::query()->updateOrCreate([
                 'google_id' => $googleUser->getId(),
             ], [
                 'name'                 => $googleUser->name,
                 'email'                => $googleUser->getEmail(),
-                'google_token'         => $googleUser->token,
+                'google_token'         => $token,
                 'google_refresh_token' => $googleUser->refreshToken,
-                'google_id'            => $googleUser->getId(),
+                'google_id'            => $id,
             ]);
 
             Auth::login($user);
