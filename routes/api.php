@@ -36,7 +36,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
             Auth::login($user);
 
-            return redirect('127.0.0.1:5173');
+            return redirect('http://127.0.0.1:5173');
         });
     });
 
