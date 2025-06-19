@@ -12,9 +12,11 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('google_id')->nullable()->unique();
             $table->string('name');
             $table->string('email')->unique();
+            $table->bigInteger('google_id')->nullable()->unique();
+            $table->string('google_token')->nullable()->unique();
+            $table->string('google_refresh_token')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
         });
