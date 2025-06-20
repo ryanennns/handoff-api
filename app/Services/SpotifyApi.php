@@ -10,6 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -106,6 +107,13 @@ class SpotifyApi extends StreamingServiceApi
 
     public function createPlaylist(string $name, array $tracks): string
     {
-        throw new RuntimeException('Not implemented');
+        $response = Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . '/me/playlists', [
+                'name'        => $name,
+                'description' => 'Created via Playlist Transfer',
+                'public'      => false,
+            ]);
+
+        Log::info($response->status(), $response->json());
     }
 }

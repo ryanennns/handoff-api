@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 
+$scopes = [
+    'spotify' => [
+        'playlist-modify-private',
+        'playlist-modify-public',
+        'playlist-read-private',
+        'playlist-read-public',
+    ],
+];
+
 Route::get('/', function () {
     return response()->json(['message' => 'hello world']);
 });
@@ -29,6 +38,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
             return Socialite::driver($provider)
                 ->with(['state' => $state])
+                ->scopes($scopes[$provider] ?? [])
                 ->redirect();
         });
 
@@ -37,8 +47,9 @@ Route::prefix('auth')->name('auth.')->group(function () {
             $userId = json_decode(Crypt::decryptString($state))->user_id;
 
             $oauthUser = Socialite::driver($provider)
-                ->stateless()
+                ->with(['state' => $request->input('state')])
                 ->user();
+
 
             $user = User::query()->firstOrCreate(['id' => $userId]);
             $user->oauthCredentials()->updateOrCreate([
