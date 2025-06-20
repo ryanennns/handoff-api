@@ -17,7 +17,7 @@ class GetPlaylistsController extends Controller
         /** @var User $user */
         $user = auth()->user();
         if (
-            $user->oauthCredentials()
+            !$user->oauthCredentials()
                 ->where('provider', $service)
                 ->exists()
         ) {
