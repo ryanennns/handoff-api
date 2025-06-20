@@ -14,6 +14,13 @@ return new class extends Migration {
             $table->json('playlists');
             $table->enum('status', ['pending', 'in_progress', 'completed', 'failed'])
                 ->default('pending');
+
+            $table->uuid('user_id');
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
     }

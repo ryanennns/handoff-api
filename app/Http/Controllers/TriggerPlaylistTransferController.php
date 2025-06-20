@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PlaylistTransfer;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,9 @@ class TriggerPlaylistTransferController extends Controller
         $destination = $request->input('destination');
         $playlists = $request->input('playlists');
 
-        $playlistTransfer = PlaylistTransfer::query()->create([
+        /** @var User $user */
+        $user = auth()->user();
+        $playlistTransfer = $user->playlistTransfers()->create([
             'source'      => $source,
             'destination' => $destination,
             'playlists'   => json_encode($playlists),

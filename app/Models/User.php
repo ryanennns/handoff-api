@@ -35,4 +35,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(OauthCredential::class, 'user_id', 'id');
     }
+
+    public function playlistTransfers(): HasMany
+    {
+        return $this->hasMany(PlaylistTransfer::class, 'user_id', 'id');
+    }
 }
