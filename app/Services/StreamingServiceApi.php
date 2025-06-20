@@ -18,6 +18,8 @@ abstract class StreamingServiceApi
         switch ($provider) {
             case 'spotify':
                 return new SpotifyApi($credential);
+            case 'youtube':
+                return new YouTubeApi($credential);
             default:
                 return null;
         }
