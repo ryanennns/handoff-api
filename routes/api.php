@@ -28,12 +28,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
             $user = User::query()->updateOrCreate([
                 "{$provider}_id" => $oauthUser->getId(),
-            ], [
+            ], collect([
                 'name'                      => $oauthUser->name,
                 'email'                     => $oauthUser->getEmail(),
                 "{$provider}_token"         => $oauthUser->token,
                 "{$provider}_refresh_token" => $oauthUser->refreshToken,
-            ]);
+            ])->filter(fn ($value) => !is_null($value))->toArray());
 
             Auth::login($user);
             $user->tokens()->delete();
