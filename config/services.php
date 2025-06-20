@@ -26,6 +26,12 @@ return [
         'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/spotify',
     ],
 
+    'youtube' => [
+        'client_id'     => env('YOUTUBE_CLIENT_ID'),
+        'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
+        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/youtube',
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
