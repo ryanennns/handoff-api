@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PlaylistTransfer;
 use App\Models\User;
+use App\Services\StreamingServiceApi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,6 +30,11 @@ class TriggerPlaylistTransferController extends Controller
             'playlists'   => json_encode($playlists),
             'status'      => 'pending',
         ]);
+
+        $credential = $user->oauthCredentials()->where('provider', $source)->first();
+        $api = StreamingServiceApi::getServiceForProvider($source, $credential);
+        $stuff = $api->getPlaylistTracks($playlists[0]);
+        dd($stuff);
 
         return response()->json([
             'message' => 'Playlist transfer triggered successfully.',

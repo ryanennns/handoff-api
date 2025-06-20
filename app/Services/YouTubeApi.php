@@ -102,7 +102,7 @@ class YouTubeApi extends StreamingServiceApi
         return collect(Arr::get($response->json(), 'items'))->map(fn($item) => [
             'id'       => Arr::get($item, 'contentDetails.videoId'),
             'name'     => Arr::get($item, 'snippet.title'),
-            'artists'  => null,
+            'artists'  => [Arr::get($item, 'snippet.videoOwnerChannelTitle')],
             'explicit' => null,
             'album'    => [
                 'id'     => null,
