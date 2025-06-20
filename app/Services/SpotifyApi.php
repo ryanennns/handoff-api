@@ -79,6 +79,7 @@ class SpotifyApi extends StreamingServiceApi
                     'id'           => Arr::get($item, 'owner.id'),
                 ],
                 'number_of_tracks' => Arr::get($item, 'tracks.total'),
+                'images'           => Arr::get($item, 'images'),
             ])->toArray();
     }
 
