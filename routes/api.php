@@ -4,6 +4,7 @@ use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\TriggerPlaylistTransferController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,6 +61,10 @@ Route::prefix('auth')->name('auth.')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('playlist-transfers')->group(function () {
+        Route::post('/trigger', TriggerPlaylistTransferController::class)->name('trigger');
+    });
+
     Route::get('/services', GetACtiveServicesController::class)->name('services');
 
     Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
