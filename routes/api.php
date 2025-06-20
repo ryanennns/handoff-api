@@ -32,15 +32,15 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
         Route::get('callback/{provider}', function (string $provider, Request $request) {
             $state = $request->input('state');
+            $userId = json_decode(Crypt::decryptString($state))->user_id;
+
             $oauthUser = Socialite::driver($provider)
                 ->stateless()
                 ->user();
 
             $user = User::query()->updateOrCreate([
-                "{$provider}_id" => $oauthUser->getId(),
+                'id' => $userId,
             ], collect([
-                'name'                      => $oauthUser->name,
-                'email'                     => $oauthUser->getEmail(),
                 "{$provider}_token"         => $oauthUser->token,
                 "{$provider}_refresh_token" => $oauthUser->refreshToken,
             ])->filter(fn($value) => !is_null($value))->toArray());
