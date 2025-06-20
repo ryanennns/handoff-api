@@ -41,7 +41,10 @@ Route::prefix('auth')->name('auth.')->group(function () {
                 ->user();
 
             $user = User::query()->firstOrCreate(['id' => $userId]);
-            $user->oauthCredentials()->create([
+            $user->oauthCredentials()->updateOrCreate([
+                'provider' => $provider,
+                'email'    => $oauthUser->getEmail(),
+            ], [
                 'provider'      => $provider,
                 'provider_id'   => $oauthUser->getId(),
                 'email'         => $oauthUser->getEmail(),
