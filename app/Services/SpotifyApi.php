@@ -72,6 +72,7 @@ class SpotifyApi extends StreamingServiceApi
 
         return collect(Arr::get($response->json(), 'items'))
             ->map(fn($item) => [
+                'id'               => Arr::get($item, 'id'),
                 'name'             => Arr::get($item, 'name'),
                 'tracks'           => Arr::get($item, 'tracks.href'),
                 'owner'            => [
