@@ -32,7 +32,6 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
         Route::get('callback/{provider}', function (string $provider, Request $request) {
             $state = $request->input('state');
-            dd(Crypt::decryptString($state));
             $oauthUser = Socialite::driver($provider)->user();
 
             $user = User::query()->updateOrCreate([
