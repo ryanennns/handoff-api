@@ -20,7 +20,7 @@ Route::get('/user', function (Request $request) {
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
         Route::get('redirect/{provider}', function (string $provider) {
-            return Socialite::driver($provider)->redirect()->with(['state' => 'snickers']);
+            return Socialite::driver($provider)->with(['state' => 'snickers'])->redirect();
         });
 
         Route::get('callback/{provider}', function (string $provider, Request $request) {
