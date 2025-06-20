@@ -20,6 +20,12 @@ return [
         'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/google',
     ],
 
+    'spotify' => [
+        'client_id'     => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/spotify',
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
