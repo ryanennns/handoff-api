@@ -74,7 +74,10 @@ class SpotifyApi extends StreamingServiceApi
             ->map(fn($item) => [
                 'name'             => Arr::get($item, 'name'),
                 'tracks'           => Arr::get($item, 'tracks.href'),
-                'owner'            => Arr::get($item, 'owner'),
+                'owner'            => [
+                    'display_name' => Arr::get($item, 'owner.display_name'),
+                    'id'           => Arr::get($item, 'owner.id'),
+                ],
                 'number_of_tracks' => Arr::get($item, 'tracks.total'),
             ])->toArray();
     }
