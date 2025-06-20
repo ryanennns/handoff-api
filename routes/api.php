@@ -5,6 +5,7 @@ use App\Http\Controllers\RegisterController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -19,12 +20,19 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
-        Route::get('redirect/{provider}', function (string $provider) {
-            return Socialite::driver($provider)->with(['state' => 'snickers'])->redirect();
+        Route::get('redirect/{provider}', function (string $provider, Request $request) {
+            $state = Crypt::encryptString(json_encode([
+                'user_id' => $request->user()?->getKey(),
+            ]));
+
+            return Socialite::driver($provider)
+                ->stateless()
+                ->with(['state' => $state])
+                ->redirect();
         });
 
         Route::get('callback/{provider}', function (string $provider, Request $request) {
-            dd($request->all());
+            $state = $request->input('state');
             $oauthUser = Socialite::driver($provider)->user();
 
             $user = User::query()->updateOrCreate([
@@ -34,7 +42,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
                 'email'                     => $oauthUser->getEmail(),
                 "{$provider}_token"         => $oauthUser->token,
                 "{$provider}_refresh_token" => $oauthUser->refreshToken,
-            ])->filter(fn ($value) => !is_null($value))->toArray());
+            ])->filter(fn($value) => !is_null($value))->toArray());
 
             Auth::login($user);
             $user->tokens()->delete();
