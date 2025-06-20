@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GetPlaylistsController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Models\User;
@@ -55,5 +56,9 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
     Route::post('login', LoginController::class)->name('login');
     Route::post('register', RegisterController::class)->name('register');
+
+});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
 });
 
