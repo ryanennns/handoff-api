@@ -78,7 +78,7 @@ class YouTubeApi extends StreamingServiceApi
             'maxResults' => 50,
         ]);
 
-        dd($response);
+        dd($response->json());
 
         return collect(Arr::get($response->json(), 'items'))->map(fn($item) => [
             'id'               => Arr::get($item, 'id'),
