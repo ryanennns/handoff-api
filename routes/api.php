@@ -20,10 +20,11 @@ Route::get('/user', function (Request $request) {
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
         Route::get('redirect/{provider}', function (string $provider) {
-            return Socialite::driver($provider)->redirect();
+            return Socialite::driver($provider)->redirect()->with(['snickers' => 'peanuts']);
         });
 
-        Route::get('callback/{provider}', function (string $provider) {
+        Route::get('callback/{provider}', function (string $provider, Request $request) {
+            dd($request->all());
             $oauthUser = Socialite::driver($provider)->user();
 
             $user = User::query()->updateOrCreate([
