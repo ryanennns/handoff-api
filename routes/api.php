@@ -26,8 +26,6 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('callback/{provider}', function (string $provider) {
             $oauthUser = Socialite::driver($provider)->user();
 
-            dd(auth()->user());
-
             $user = User::query()->updateOrCreate([
                 "{$provider}_id" => $oauthUser->getId(),
             ], collect([
