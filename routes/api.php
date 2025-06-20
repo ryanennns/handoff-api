@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
@@ -58,7 +59,10 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('register', RegisterController::class)->name('register');
 
 });
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/services', GetACtiveServicesController::class)->name('services');
+
     Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
 });
 
