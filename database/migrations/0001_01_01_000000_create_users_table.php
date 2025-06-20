@@ -15,14 +15,6 @@ return new class extends Migration {
             $table->string('name')->nullable();
             $table->string('email')->nullable()->unique();
 
-            $table->string('google_id')->nullable()->unique();
-            $table->text('google_token')->nullable()->unique();
-            $table->string('google_refresh_token')->nullable()->unique();
-
-            $table->string('spotify_id')->nullable()->unique();
-            $table->text('spotify_token')->nullable()->unique();
-            $table->string('spotify_refresh_token')->nullable()->unique();
-
             $table->rememberToken();
             $table->timestamps();
         });

@@ -38,12 +38,14 @@ Route::prefix('auth')->name('auth.')->group(function () {
                 ->stateless()
                 ->user();
 
-            $user = User::query()->updateOrCreate([
-                'id' => $userId,
-            ], collect([
-                "{$provider}_token"         => $oauthUser->token,
-                "{$provider}_refresh_token" => $oauthUser->refreshToken,
-            ])->filter(fn($value) => !is_null($value))->toArray());
+            $user = User::query()->firstOrCreate(['id' => $userId]);
+            $user->oauthCredentials()->create([
+                'provider'      => $provider,
+                'provider_id'   => $oauthUser->getId(),
+                'email'         => $oauthUser->getEmail(),
+                'token'         => $oauthUser->token,
+                'refresh_token' => $oauthUser->refreshToken,
+            ]);
 
             Auth::login($user);
             $user->tokens()->delete();
