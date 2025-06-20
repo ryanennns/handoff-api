@@ -26,13 +26,13 @@ Route::prefix('auth')->name('auth.')->group(function () {
             ]));
 
             return Socialite::driver($provider)
-                ->stateless()
                 ->with(['state' => $state])
                 ->redirect();
         });
 
         Route::get('callback/{provider}', function (string $provider, Request $request) {
             $state = $request->input('state');
+            dd(Crypt::decryptString($state));
             $oauthUser = Socialite::driver($provider)->user();
 
             $user = User::query()->updateOrCreate([
