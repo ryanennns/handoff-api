@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\Track;
 use App\Models\OauthCredential;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -88,16 +89,23 @@ class SpotifyApi extends StreamingServiceApi
     {
         $response = $this->makeRequest("/playlists/{$playlistId}/tracks");
 
-        return collect(Arr::get($response->json(), 'items'))->map(fn($item) => [
-            'id'       => Arr::get($item, 'track.id'),
-            'name'     => Arr::get($item, 'track.name'),
-            'artists'  => Arr::get($item, 'track.artists'),
-            'explicit' => Arr::get($item, 'track.explicit'),
-            'album'    => [
-                'id'     => Arr::get($item, 'track.album.id'),
-                'name'   => Arr::get($item, 'track.album.name'),
-                'images' => Arr::get($item, 'track.album.images'),
-            ]
-        ])->toArray();
+        return collect(Arr::get($response->json(), 'items'))
+            ->map(fn($item) => new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($item, 'track.id'),
+                'name'      => Arr::get($item, 'track.name'),
+                'artists'   => Arr::get($item, 'track.artists'),
+                'explicit'  => Arr::get($item, 'track.explicit'),
+                'album'     => [
+                    'id'     => Arr::get($item, 'track.album.id'),
+                    'name'   => Arr::get($item, 'track.album.name'),
+                    'images' => Arr::get($item, 'track.album.images'),
+                ]
+            ]))->toArray();
+    }
+
+    public function createPlaylist(string $name, array $tracks): string
+    {
+        throw new RuntimeException('Not implemented');
     }
 }

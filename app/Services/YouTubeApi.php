@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\Track;
 use App\Models\OauthCredential;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -9,6 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -73,8 +75,8 @@ class YouTubeApi extends StreamingServiceApi
     public function getPlaylists(): array
     {
         $response = $this->makeRequest('/playlists', [
-            'mine' => 'true',
-            'part' => 'id,snippet,contentDetails',
+            'mine'       => 'true',
+            'part'       => 'id,snippet,contentDetails',
             'maxResults' => 50,
         ]);
 
@@ -99,16 +101,23 @@ class YouTubeApi extends StreamingServiceApi
             'maxResults' => 50,
         ]);
 
-        return collect(Arr::get($response->json(), 'items'))->map(fn($item) => [
-            'id'       => Arr::get($item, 'contentDetails.videoId'),
-            'name'     => Arr::get($item, 'snippet.title'),
-            'artists'  => [Arr::get($item, 'snippet.videoOwnerChannelTitle')],
-            'explicit' => null,
-            'album'    => [
-                'id'     => null,
-                'name'   => null,
-                'images' => [Arr::get($item, 'snippet.thumbnails.medium')],
-            ],
-        ])->toArray();
+        return collect(Arr::get($response->json(), 'items'))
+            ->map(fn($item) => new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($item, 'contentDetails.videoId'),
+                'name'      => Arr::get($item, 'snippet.title'),
+                'artists'   => [str_replace(' - Topic', '', Arr::get($item, 'snippet.videoOwnerChannelTitle', ''))],
+                'explicit'  => null,
+                'album'     => [
+                    'id'     => null,
+                    'name'   => null,
+                    'images' => [Arr::get($item, 'snippet.thumbnails.medium')],
+                ],
+            ]))->toArray();
+    }
+
+    public function createPlaylist(string $name, array $tracks): string
+    {
+        throw new RuntimeException('YouTube API does not support creating playlists via this method.');
     }
 }
