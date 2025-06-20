@@ -19,44 +19,29 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
-        Route::get('redirect', function () {
-            return Socialite::driver('google')
-                ->scopes(['openid', 'profile', 'email'])
-                ->redirect();
+        Route::get('redirect/{provider}', function (string $provider) {
+            return Socialite::driver($provider)->redirect();
         });
 
-        Route::get('callback', function () {
-            $googleUser = Socialite::driver('google')->user();
+        Route::get('callback/{provider}', function (string $provider) {
+            $oauthUser = Socialite::driver($provider)->user();
 
-            $token = $googleUser->token;
-            $id = $googleUser->getId();
-            Log::info('Google User Info', [
-                'id'    => $id,
-                'name'  => $googleUser->name,
-                'email' => $googleUser->getEmail(),
-                'token' => $token,
-            ]);
-
-            $user = User::query()->updateOrCreate([
-                'google_id' => $googleUser->getId(),
+            $user = User::updateOrCreate([
+                "{$provider}_id" => $oauthUser->getId(),
             ], [
-                'name'                 => $googleUser->name,
-                'email'                => $googleUser->getEmail(),
-                'google_token'         => $token,
-                'google_refresh_token' => $googleUser->refreshToken,
-                'google_id'            => $id,
+                'name'                      => $oauthUser->name,
+                'email'                     => $oauthUser->getEmail(),
+                "{$provider}_token"         => $oauthUser->token,
+                "{$provider}_refresh_token" => $oauthUser->refreshToken,
             ]);
 
             Auth::login($user);
-
             $user->tokens()->delete();
             return redirect('http://127.0.0.1:5173/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
         });
     });
 
-    Route::post('login', LoginController::class)
-        ->name('login');
-
-    Route::post('register', RegisterController::class)
-        ->name('register');
+    Route::post('login', LoginController::class)->name('login');
+    Route::post('register', RegisterController::class)->name('register');
 });
+
