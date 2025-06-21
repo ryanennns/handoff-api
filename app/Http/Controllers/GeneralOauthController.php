@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
 
 class GeneralOauthController extends Controller
@@ -14,34 +16,44 @@ class GeneralOauthController extends Controller
         'spotify' => [
             'playlist-modify-private',
             'playlist-modify-public',
-            'playlist-read-private',
-            'playlist-read-public',
         ],
     ];
 
     public function redirect(string $provider, Request $request)
     {
-        $state = Crypt::encryptString(json_encode([
-            'user_id' => $request->user()?->getKey(),
-        ]));
+        $scopes = self::SCOPES[$provider] ?? [];
 
-        Log::info('state', ['state' => [
-            'user_id' => $request->user()?->getKey(),
-        ]]);
-
-        return Socialite::driver($provider)
-            ->scopes($scopes[$provider] ?? [])
+        $redirectResponse = Socialite::driver($provider)
+            ->scopes($scopes)
             ->redirect();
+
+        $targetUrl = $redirectResponse->getTargetUrl();
+
+        $parsed = parse_url($targetUrl);
+        parse_str($parsed['query'] ?? '', $query);
+        $state = $query['state'] ?? null;
+
+        $token = $request->query('token');
+        $userId = PersonalAccessToken::findToken($token)->tokenable->getKey();
+
+        if (!$userId) {
+            throw new \Exception('User ID not found for token');
+        }
+
+        if ($state) {
+            Cache::put("oauth:state:{$state}", $userId, now()->addMinutes(1));
+        }
+
+        return redirect($targetUrl);
     }
+
 
     public function callback(string $provider, Request $request)
     {
-        $state = $request->input('state');
-        $userId = json_decode(Crypt::decryptString($state))->user_id;
+        $state = $request->query('state');
+        $userId = Cache::pull("oauth:state:$state");
 
-        $oauthUser = Socialite::driver($provider)
-            ->stateless() // need to reconcile state to use more api scopes for spotify
-            ->user();
+        $oauthUser = Socialite::driver($provider)->user();
 
         $user = User::query()->firstOrCreate(['id' => $userId]);
         $user->oauthCredentials()->updateOrCreate([
@@ -55,8 +67,6 @@ class GeneralOauthController extends Controller
             'refresh_token' => $oauthUser->refreshToken,
         ]);
 
-        Auth::login($user);
-        $user->tokens()->delete();
-        return redirect('http://127.0.0.1:5173/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
+        return redirect('http://127.0.0.1:5173/dashboard');
     }
 }
