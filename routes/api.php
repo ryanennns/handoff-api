@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
+use App\Http\Controllers\GoogleOauthController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\TriggerPlaylistTransferController;
@@ -31,7 +32,12 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware(['web'])->group(function () {
+        Route::get('redirect/google', [GoogleOauthController::class, 'redirect']);
+        Route::get('callback/google', [GoogleOauthController::class, 'callback']);
+
         Route::get('redirect/{provider}', function (string $provider, Request $request) {
+            $state = $request->input('state');
+
             $state = Crypt::encryptString(json_encode([
                 'user_id' => $request->user()?->getKey(),
             ]));
@@ -47,9 +53,8 @@ Route::prefix('auth')->name('auth.')->group(function () {
             $userId = json_decode(Crypt::decryptString($state))->user_id;
 
             $oauthUser = Socialite::driver($provider)
-                ->with(['state' => $request->input('state')])
+                ->stateless() // need to reconcile state to use more api scopes for spotify
                 ->user();
-
 
             $user = User::query()->firstOrCreate(['id' => $userId]);
             $user->oauthCredentials()->updateOrCreate([
