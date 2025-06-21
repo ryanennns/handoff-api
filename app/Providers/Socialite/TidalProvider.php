@@ -3,6 +3,7 @@
 namespace App\Providers\Socialite;
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SocialiteProviders\Manager\Contracts\OAuth2\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
@@ -12,22 +13,31 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
 {
     protected function getAuthUrl($state): string
     {
-        $code = Str::random(32);
-        $clientId = Config::get('services.tidal.client_id');
-        $clientSecret = Config::get('services.tidal.client_secret');
-        $clientRedirectUri = Config::get('services.tidal.redirect');
-        $query = http_build_query([
-            'response_type' => 'code',
-            'client_id'     => $clientId,
-            'client_secret' => $clientSecret,
-            'redirect_uri'  => $clientRedirectUri,
-            'code_challenge_method' => hash('SHA256', $code),
+        Log::info('tidal request', [
+            'user' => request()->all(),
+            'state' => $state,
         ]);
 
-        return $this->buildAuthUrlFromBase(
-            "https://login.tidal.com/authorize?{$query}",
-            $state
-        );
+        Log::info('tidal provider', [
+            'user' => request()->user(),
+        ]);
+
+        $clientId = Config::get('services.tidal.client_id');
+        $redirectUri = Config::get('services.tidal.redirect');
+
+        $codeVerifier = Str::random(64); // Store this securely for later token exchange
+        $codeChallenge = $this->base64urlEncode($codeVerifier);
+
+        $query = http_build_query([
+            'response_type'         => 'code',
+            'client_id'             => $clientId,
+            'redirect_uri'          => $redirectUri,
+            'code_challenge_method' => 'S256',
+            'code_challenge'        => $codeChallenge,
+            'state'                 => $state,
+        ]);
+
+        return "https://login.tidal.com/authorize?{$query}";
     }
 
     protected function getTokenUrl(): string
@@ -63,5 +73,12 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
             'country'    => $attributes['country'] ?? null,
             'public_key' => $attributes['nostrPublicKey'] ?? null,
         ]);
+    }
+
+    private function base64urlEncode($plainText): string
+    {
+        $base64 = base64_encode($plainText);
+        $base64 = trim($base64, "=");
+        return strtr($base64, '+/', '-_');
     }
 }

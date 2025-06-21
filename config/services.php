@@ -35,7 +35,7 @@ return [
     'tidal' => [
         'client_id'     => env('TIDAL_CLIENT_ID'),
         'client_secret' => env('TIDAL_CLIENT_SECRET'),
-        'redirect'      => env('https://handoff-api.enns.dev/api/auth/callback/tidal'),
+        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/tidal',
     ],
 
     'postmark' => [
