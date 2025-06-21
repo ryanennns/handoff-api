@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\OauthCredential;
 use App\Observers\OauthCredentialObserver;
+use App\Providers\Socialite\TidalProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('spotify', SpotifyProvider::class);
             $event->extendSocialite('youtube', YouTubeProvider::class);
+            $event->extendSocialite('tidal', TidalProvider::class);
         });
     }
 }

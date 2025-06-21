@@ -32,6 +32,12 @@ return [
         'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/youtube',
     ],
 
+    'tidal' => [
+        'client_id'     => env('TIDAL_CLIENT_ID'),
+        'client_secret' => env('TIDAL_CLIENT_SECRET'),
+        'redirect'      => env('https://handoff-api.enns.dev/api/auth/callback/tidal'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
