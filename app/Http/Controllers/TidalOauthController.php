@@ -43,8 +43,8 @@ class TidalOauthController extends Controller
     public function callback(Request $request)
     {
         $provider = self::PROVIDER;
+        // todo handle these guys
         if ($request->query('error')) {
-            dd('error from TIDAL', $request->all());
             return redirect('/api/dumping-ground')->withErrors('Error during TIDAL OAuth process: ' . $request->query('error'));
         }
 
@@ -62,13 +62,6 @@ class TidalOauthController extends Controller
         ]);
 
         if ($response->failed()) {
-            dd('Failed to retrieve access token from TIDAL', $response->body(), [
-                'grant_type'    => 'authorization_code',
-                'client_id'     => Config::get("services.{$provider}.client_id"),
-                'code'          => $code,
-                'redirect_uri'  => Config::get("services.{$provider}.redirect"),
-                'code_verifier' => $codeVerifier,
-            ]);
             return redirect('/api/dumping-ground')->withErrors(['error' => 'Failed to retrieve access token']);
         }
 

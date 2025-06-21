@@ -7,6 +7,10 @@ use App\Models\OauthCredential;
 
 abstract class StreamingServiceApi
 {
+    protected OauthCredential $oauthCredential;
+
+    abstract public function refreshToken(): void;
+
     abstract public function getPlaylists(): array;
 
     /** @returns Track[] */
@@ -22,6 +26,7 @@ abstract class StreamingServiceApi
         return match ($provider) {
             'spotify' => new SpotifyApi($credential),
             'youtube' => new YouTubeApi($credential),
+            'tidal'   => new TidalApi($credential),
             default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
         };
     }

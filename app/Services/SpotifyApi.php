@@ -19,8 +19,6 @@ class SpotifyApi extends StreamingServiceApi
     public const PROVIDER = 'spotify';
     private const BASE_URL = 'https://api.spotify.com/v1';
 
-    private OauthCredential $oauthCredential;
-
     public function __construct(OauthCredential $oauthCredential)
     {
         if ($oauthCredential->provider !== self::PROVIDER) {
@@ -28,14 +26,9 @@ class SpotifyApi extends StreamingServiceApi
         }
 
         $this->oauthCredential = $oauthCredential;
-
-        $response = Http::withToken($oauthCredential->token)->get(self::BASE_URL . '/me');
-        if ($response->status() === 401) {
-            $this->refreshToken();
-        }
     }
 
-    private function refreshToken(): void
+    public function refreshToken(): void
     {
         $response = Http::asForm()->post('https://accounts.spotify.com/api/token', [
             'grant_type'    => 'refresh_token',
@@ -54,7 +47,7 @@ class SpotifyApi extends StreamingServiceApi
 
     private function makeRequest(string $endpoint, array $params = []): PromiseInterface|Response
     {
-        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->update_at)) > 60) {
+        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
             $this->refreshToken();
         }
 
