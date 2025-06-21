@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\TidalApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -70,12 +71,24 @@ class TidalOauthController extends Controller
         $refreshToken = Arr::get($json, 'refresh_token');
         $expiresIn = Arr::get($json, 'expires_in');
 
+        // todo get the country code off this and store it with the credentials
+        $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
+
+        if ($userResponse->failed()) {
+            return redirect('/api/dumping-ground')->withErrors(['error' => 'Failed to retrieve user information']);
+        }
+
+        $userData = $userResponse->json();
+        $tidalUserId = Arr::get($userData, 'data.id');
+        $tidalEmail = Arr::get($userData, 'data.attributes.email');
+
         $user = User::query()->firstOrCreate(['id' => $userId]);
         $user->oauthCredentials()->updateOrCreate([
             'provider' => $provider,
         ], [
             'provider'      => $provider,
-            'provider_id'   => 'tidal',
+            'provider_id'   => $tidalUserId,
+            'email'         => $tidalEmail,
             'token'         => $accessToken,
             'refresh_token' => $refreshToken,
             'expires_at'    => now()->addSeconds($expiresIn),

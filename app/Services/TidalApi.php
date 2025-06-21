@@ -15,13 +15,14 @@ class TidalApi extends StreamingServiceApi
     {
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/playlists', [
-                'limit'  => 50,
-                'offset' => 0,
+                'countryCode'         => 'CA',
+                'filter[r.owners.id]' => $this->oauthCredential->provider_id,
             ]);
 
-        Log::info('tidal api response', $response->json());
+        $json = $response->json();
+        Log::info('tidal api response', $json);
 
-        return collect(Arr::get($response->json(), 'playlists', []))
+        return collect(Arr::get($json, 'data', []))
             ->map(fn($item) => [
                 'id'               => Arr::get($item, 'id'),
                 'name'             => Arr::get($item, 'attributes.name'),

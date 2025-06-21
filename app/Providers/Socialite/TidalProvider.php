@@ -4,8 +4,6 @@ namespace App\Providers\Socialite;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use SocialiteProviders\Manager\Contracts\OAuth2\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
@@ -22,12 +20,6 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
         $codeChallenge = $this->base64urlEncode(pack('H*', hash('sha256', $verifier)));
 
         Cache::put("oauth:tidal:state:{$state}", $verifier, 5);
-        Log::info('caching Tidal OAuth state', [
-            'state'        => $state,
-            'codeVerifier' => Cache::get("oauth:tidal:state:{$state}"),
-            'clientId'     => $clientId,
-            'redirectUri'  => $redirectUri,
-        ]);
         $query = http_build_query([
             'response_type'         => 'code',
             'client_id'             => $clientId,
@@ -35,6 +27,7 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
             'code_challenge_method' => 'S256',
             'code_challenge'        => $codeChallenge,
             'state'                 => $state,
+            'scope'                => 'playlists.read',
         ]);
 
         return "https://login.tidal.com/authorize?{$query}";
