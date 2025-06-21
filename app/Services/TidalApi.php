@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class TidalApi extends StreamingServiceApi
 {
+    public const PROVIDER = 'tidal';
     public const BASE_URL = 'https://openapi.tidal.com/v2';
 
     public function getPlaylists(): array

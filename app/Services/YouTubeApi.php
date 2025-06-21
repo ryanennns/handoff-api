@@ -3,15 +3,12 @@
 namespace App\Services;
 
 use App\Helpers\Track;
-use App\Models\OauthCredential;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 use RuntimeException;
 
 class YouTubeApi extends StreamingServiceApi
@@ -19,27 +16,7 @@ class YouTubeApi extends StreamingServiceApi
     public const PROVIDER = 'youtube';
     private const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-    private OauthCredential $oauthCredential;
-
-    public function __construct(OauthCredential $oauthCredential)
-    {
-        if ($oauthCredential->provider !== self::PROVIDER) {
-            throw new InvalidArgumentException('Invalid provider. Expected "youtube".');
-        }
-
-        $this->oauthCredential = $oauthCredential;
-
-        $response = Http::withToken($oauthCredential->token)->get(self::BASE_URL . '/channels', [
-            'mine' => 'true',
-            'part' => 'id',
-        ]);
-
-        if ($response->status() === 401) {
-            $this->refreshToken();
-        }
-    }
-
-    private function refreshToken(): void
+    public function refreshToken(): void
     {
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'grant_type'    => 'refresh_token',

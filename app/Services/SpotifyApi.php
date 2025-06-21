@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Helpers\Track;
-use App\Models\OauthCredential;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -11,22 +10,12 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 use RuntimeException;
 
 class SpotifyApi extends StreamingServiceApi
 {
     public const PROVIDER = 'spotify';
     private const BASE_URL = 'https://api.spotify.com/v1';
-
-    public function __construct(OauthCredential $oauthCredential)
-    {
-        if ($oauthCredential->provider !== self::PROVIDER) {
-            throw new InvalidArgumentException('Invalid provider. Expected "spotify".');
-        }
-
-        $this->oauthCredential = $oauthCredential;
-    }
 
     public function refreshToken(): void
     {

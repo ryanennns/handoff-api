@@ -7,7 +7,14 @@ use App\Models\OauthCredential;
 
 abstract class StreamingServiceApi
 {
-    protected OauthCredential $oauthCredential;
+    public const PROVIDER = 'generic';
+
+    public function __construct(protected readonly OauthCredential $oauthCredential)
+    {
+        if ($oauthCredential->provider !== static::PROVIDER) {
+            throw new \InvalidArgumentException("Invalid provider. Expected: " . static::PROVIDER);
+        }
+    }
 
     abstract public function refreshToken(): void;
 
