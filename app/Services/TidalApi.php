@@ -4,12 +4,33 @@ namespace App\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TidalApi extends StreamingServiceApi
 {
+    public const BASE_URL = 'https://openapi.tidal.com/v2';
+
     public function getPlaylists(): array
     {
-        throw new \RuntimeException("Not implemented");
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . '/playlists', [
+                'limit'  => 50,
+                'offset' => 0,
+            ]);
+
+        Log::info('tidal api response', $response->json());
+
+        return collect(Arr::get($response->json(), 'playlists', []))
+            ->map(fn($item) => [
+                'id'               => Arr::get($item, 'id'),
+                'name'             => Arr::get($item, 'attributes.name'),
+                'tracks'           => null,
+                'owner'            => [
+                    'display_name' => Arr::get($item, 'attributes.relationships.owners.data', ''),
+                ],
+                'number_of_tracks' => Arr::get($item, 'attributes.numberOfItems'),
+                'image_uri'        => Arr::get($item, 'attributes.relatinoships.coverArt.data', ''),
+            ])->toArray();
     }
 
     public function getPlaylistTracks(string $playlistId): array
