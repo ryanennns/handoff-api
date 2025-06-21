@@ -17,10 +17,11 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
         $clientId = Config::get('services.tidal.client_id');
         $redirectUri = Config::get('services.tidal.redirect');
 
-        $codeVerifier = Str::random(64); // Store this securely for later token exchange
-        $codeChallenge = $this->base64urlEncode($codeVerifier);
+        $random = bin2hex(openssl_random_pseudo_bytes(32));
+        $verifier = $this->base64urlEncode(pack('H*', $random));
+        $codeChallenge = $this->base64urlEncode(pack('H*', hash('sha256', $verifier)));
 
-        Cache::put("oauth:tidal:state:{$state}", $codeVerifier, 5);
+        Cache::put("oauth:tidal:state:{$state}", $verifier, 5);
         Log::info('caching Tidal OAuth state', [
             'state'        => $state,
             'codeVerifier' => Cache::get("oauth:tidal:state:{$state}"),
