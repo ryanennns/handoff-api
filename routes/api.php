@@ -3,6 +3,7 @@
 use App\Http\Controllers\GeneralOauthController;
 use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
+use App\Http\Controllers\GetPlaylistTransfersController;
 use App\Http\Controllers\GoogleOauthController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
@@ -32,8 +33,9 @@ Route::prefix('auth')->name('auth.')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::prefix('playlist-transfers')->group(function () {
+    Route::prefix('playlist-transfers')->name('playlist-transfers.')->group(function () {
         Route::post('/trigger', TriggerPlaylistTransferController::class)->name('trigger');
+        Route::get('/', GetPlaylistTransfersController::class)->name('index');
     });
 
     Route::get('/services', GetACtiveServicesController::class)->name('services');

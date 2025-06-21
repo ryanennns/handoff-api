@@ -26,7 +26,7 @@ class TriggerPlaylistTransferController extends Controller
         $playlistTransfer = $user->playlistTransfers()->create([
             'source'      => $source,
             'destination' => $destination,
-            'playlists'   => json_encode($playlists),
+            'playlists'   => $playlists,
             'status'      => 'pending',
         ]);
 

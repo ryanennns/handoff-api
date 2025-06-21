@@ -65,6 +65,6 @@ class GeneralOauthController extends Controller
             'refresh_token' => $oauthUser->refreshToken,
         ]);
 
-        return redirect('http://127.0.0.1:5173/dashboard');
+        return redirect('http://127.0.0.1:5173/close');
     }
 }
