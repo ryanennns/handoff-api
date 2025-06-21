@@ -1,26 +1,14 @@
 <?php
 
+use App\Http\Controllers\GeneralOauthController;
 use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
 use App\Http\Controllers\GoogleOauthController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\TriggerPlaylistTransferController;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
-use Laravel\Socialite\Facades\Socialite;
-
-$scopes = [
-    'spotify' => [
-        'playlist-modify-private',
-        'playlist-modify-public',
-        'playlist-read-private',
-        'playlist-read-public',
-    ],
-];
 
 Route::get('/', function () {
     return response()->json(['message' => 'hello world']);
@@ -35,48 +23,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('redirect/google', [GoogleOauthController::class, 'redirect']);
         Route::get('callback/google', [GoogleOauthController::class, 'callback']);
 
-        Route::get('redirect/{provider}', function (string $provider, Request $request) {
-            $state = $request->input('state');
-
-            $state = Crypt::encryptString(json_encode([
-                'user_id' => $request->user()?->getKey(),
-            ]));
-
-            return Socialite::driver($provider)
-                ->with(['state' => $state])
-                ->scopes($scopes[$provider] ?? [])
-                ->redirect();
-        });
-
-        Route::get('callback/{provider}', function (string $provider, Request $request) {
-            $state = $request->input('state');
-            $userId = json_decode(Crypt::decryptString($state))->user_id;
-
-            $oauthUser = Socialite::driver($provider)
-                ->stateless() // need to reconcile state to use more api scopes for spotify
-                ->user();
-
-            $user = User::query()->firstOrCreate(['id' => $userId]);
-            $user->oauthCredentials()->updateOrCreate([
-                'provider' => $provider,
-                'email'    => $oauthUser->getEmail(),
-            ], [
-                'provider'      => $provider,
-                'provider_id'   => $oauthUser->getId(),
-                'email'         => $oauthUser->getEmail(),
-                'token'         => $oauthUser->token,
-                'refresh_token' => $oauthUser->refreshToken,
-            ]);
-
-            Auth::login($user);
-            $user->tokens()->delete();
-            return redirect('http://127.0.0.1:5173/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
-        });
+        Route::get('redirect/{provider}', [GeneralOauthController::class, 'redirect']);
+        Route::get('callback/{provider}', [GeneralOauthController::class, 'callback']);
     });
 
     Route::post('login', LoginController::class)->name('login');
     Route::post('register', RegisterController::class)->name('register');
-
 });
 
 Route::middleware('auth:sanctum')->group(function () {
