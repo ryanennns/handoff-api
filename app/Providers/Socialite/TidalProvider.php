@@ -2,12 +2,13 @@
 
 namespace App\Providers\Socialite;
 
+use SocialiteProviders\Manager\Contracts\OAuth2\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
-class TidalProvider extends AbstractProvider
+class TidalProvider extends AbstractProvider implements ProviderInterface
 {
-    protected function getAuthUrl($state)
+    protected function getAuthUrl($state): string
     {
         return $this->buildAuthUrlFromBase(
             "https://auth.tidal.com/v1/oauth2/token",
@@ -15,7 +16,7 @@ class TidalProvider extends AbstractProvider
         );
     }
 
-    protected function getTokenUrl()
+    protected function getTokenUrl(): string
     {
         return "https://auth.tidal.com/v1/oauth2/token";
     }
