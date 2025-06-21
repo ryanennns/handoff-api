@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->text('token')->nullable();
             $table->text('refresh_token')->nullable();
+            $table->timestamp('expires_at')->nullable();
 
             $table->uuid('user_id')->index();
             $table->foreign('user_id')

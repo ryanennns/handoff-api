@@ -2,6 +2,7 @@
 
 namespace App\Providers\Socialite;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -13,21 +14,19 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
 {
     protected function getAuthUrl($state): string
     {
-        Log::info('tidal request', [
-            'user' => request()->all(),
-            'state' => $state,
-        ]);
-
-        Log::info('tidal provider', [
-            'user' => request()->user(),
-        ]);
-
         $clientId = Config::get('services.tidal.client_id');
         $redirectUri = Config::get('services.tidal.redirect');
 
         $codeVerifier = Str::random(64); // Store this securely for later token exchange
         $codeChallenge = $this->base64urlEncode($codeVerifier);
 
+        Cache::put("oauth:tidal:state:{$state}", $codeVerifier, 5);
+        Log::info('caching Tidal OAuth state', [
+            'state'        => $state,
+            'codeVerifier' => Cache::get("oauth:tidal:state:{$state}"),
+            'clientId'     => $clientId,
+            'redirectUri'  => $redirectUri,
+        ]);
         $query = http_build_query([
             'response_type'         => 'code',
             'client_id'             => $clientId,
