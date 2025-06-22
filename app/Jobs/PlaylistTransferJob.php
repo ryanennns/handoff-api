@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class PlaylistTransferJob implements ShouldQueue
 {
@@ -24,12 +25,13 @@ class PlaylistTransferJob implements ShouldQueue
             $sourceApi = $this->playlistTransfer->sourceApi();
             $destinationApi = $this->playlistTransfer->destinationApi();
 
-            collect(json_decode($this->playlistTransfer->playlists, true))
+            collect($this->playlistTransfer->playlists, true)
                 ->each(function ($playlist) use ($sourceApi, $destinationApi) {
                     $tracks = $sourceApi->getPlaylistTracks($playlist['id']);
                     $destinationApi->createPlaylist($playlist['name'], $tracks);
                 });
         } catch (\Throwable $exception) {
+            Log::error($exception->getMessage(), $exception->getTrace());
             $this->playlistTransfer->update(['status' => 'failed']);
             return;
         }
