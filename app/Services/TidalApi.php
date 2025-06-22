@@ -75,7 +75,7 @@ class TidalApi extends StreamingServiceApi
         return 'snickers';
     }
 
-    public function refreshToken(): void
+    public function maybeRefreshToken(): void
     {
         $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
             'grant_type'    => 'refresh_token',
