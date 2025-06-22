@@ -22,6 +22,7 @@ class TidalApi extends StreamingServiceApi
 
         $json = $playlistResponse->json();
 
+        Log::error('Tidal GET Playlist API Response', $json);
 
         return collect(Arr::get($json, 'data', []))
             ->map(function ($item) {
@@ -54,7 +55,24 @@ class TidalApi extends StreamingServiceApi
 
     public function createPlaylist(string $name, array $tracks): string
     {
-        throw new \RuntimeException("Not implemented");
+        $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . '/playlists', [
+                'data' => [
+                    'type'       => 'playlist',
+                    'attributes' => [
+                        'name'        => $name,
+                        'description' => '',
+                        'privacy'     => 'public',
+                    ]
+                ]
+            ]);
+
+        Log::info('Tidal API Playlist Creation', [
+            'status' => $createPlaylistResponse->status(),
+            'json'   => $createPlaylistResponse->json(),
+        ]);
+
+        return 'snickers';
     }
 
     public function refreshToken(): void

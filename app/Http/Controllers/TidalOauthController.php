@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -46,6 +47,9 @@ class TidalOauthController extends Controller
         $provider = self::PROVIDER;
         // todo handle these guys
         if ($request->query('error')) {
+            Log::error('Tidal API Error', [
+                'error' => $request->query('error'),
+            ]);
             return redirect('/api/dumping-ground')->withErrors('Error during TIDAL OAuth process: ' . $request->query('error'));
         }
 
@@ -63,6 +67,7 @@ class TidalOauthController extends Controller
         ]);
 
         if ($response->failed()) {
+            Log::error('Tidal Token API Error', $response->json());
             return redirect('/api/dumping-ground')->withErrors(['error' => 'Failed to retrieve access token']);
         }
 
@@ -75,6 +80,7 @@ class TidalOauthController extends Controller
         $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
 
         if ($userResponse->failed()) {
+            Log::info('Tidal User API Error', $response->json());
             return redirect('/api/dumping-ground')->withErrors(['error' => 'Failed to retrieve user information']);
         }
 

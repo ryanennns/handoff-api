@@ -9,6 +9,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class YouTubeApi extends StreamingServiceApi
@@ -95,6 +96,21 @@ class YouTubeApi extends StreamingServiceApi
 
     public function createPlaylist(string $name, array $tracks): string
     {
-        throw new RuntimeException('YouTube API does not support creating playlists via this method.');
+        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
+            $this->refreshToken();
+        }
+
+        $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . '/playlists', [
+                'snippet' => [
+                    'title' => $name,
+                ]
+            ]);
+
+        $json = $createPlaylistResponse->json();
+
+        Log::info('YouTube API Create Playlist response', $json);
+
+        return 'snickers';
     }
 }
