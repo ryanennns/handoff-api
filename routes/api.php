@@ -37,6 +37,9 @@ Route::prefix('auth')->name('auth.')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
+        ->middleware('auth:sanctum');
+
     Route::prefix('playlist-transfers')->name('playlist-transfers.')->group(function () {
         Route::post('/trigger', TriggerPlaylistTransferController::class)->name('trigger');
         Route::get('/', GetPlaylistTransfersController::class)->name('index');

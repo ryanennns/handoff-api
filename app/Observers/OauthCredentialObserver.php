@@ -2,8 +2,8 @@
 
 namespace App\Observers;
 
+use App\Events\NewOauthCredential;
 use App\Models\OauthCredential;
-use App\Notifications\OauthCredentialCreated;
 
 class OauthCredentialObserver
 {
@@ -13,6 +13,6 @@ class OauthCredentialObserver
             return;
         }
 
-        $oauthCredential->user()->firstOrFail()->notify(new OauthCredentialCreated($oauthCredential));
+        NewOauthCredential::dispatch($oauthCredential);
     }
 }
