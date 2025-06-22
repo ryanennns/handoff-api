@@ -15,6 +15,9 @@ class GeneralOauthController extends Controller
             'playlist-modify-private',
             'playlist-modify-public',
         ],
+        'youtube' => [
+            'https://www.googleapis.com/auth/youtube.force-ssl'
+        ],
     ];
 
     public function redirect(string $provider, Request $request)
