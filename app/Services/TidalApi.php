@@ -67,10 +67,22 @@ class TidalApi extends StreamingServiceApi
                 ]
             ]);
 
-        Log::info('Tidal API Playlist Creation', [
-            'status' => $createPlaylistResponse->status(),
-            'json'   => $createPlaylistResponse->json(),
-        ]);
+        $createPlaylistJson = $createPlaylistResponse->json();
+
+        $remoteId = Arr::get($createPlaylistJson, 'data.id');
+
+        collect($tracks)->each(function (Track $track) {
+            $response = Http::withToken($this->oauthCredential->token)
+                ->get(self::BASE_URL . '/search', [
+                    'query' => $track->toSearchString(),
+                    'types' => 'TRACKS',
+                ]);
+
+            Log::info('Searching for ' . $track->toSearchString(), [
+                'status' => $response->status(),
+                'json'   => $response->json(),
+            ]);
+        });
 
         return 'snickers';
     }
