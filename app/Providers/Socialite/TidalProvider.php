@@ -27,7 +27,7 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
             'code_challenge_method' => 'S256',
             'code_challenge'        => $codeChallenge,
             'state'                 => $state,
-            'scope'                => 'playlists.read',
+            'scope'                => 'playlists.read,playlists.write',
         ]);
 
         return "https://login.tidal.com/authorize?{$query}";
