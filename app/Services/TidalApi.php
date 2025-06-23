@@ -72,11 +72,12 @@ class TidalApi extends StreamingServiceApi
         $remoteId = Arr::get($createPlaylistJson, 'data.id');
 
         collect($tracks)->each(function (Track $track) {
+            sleep(1);
             $response = Http::withToken($this->oauthCredential->token)
-                ->get(self::BASE_URL . '/search', [
-                    'query' => $track->toSearchString(),
-                    'types' => 'TRACKS',
-                ]);
+                ->get(
+                    self::BASE_URL . '/searchResults/' . $track->toSearchString(),
+                    ['countryCode' => 'US', 'include' => 'tracks']
+                );
 
             Log::info('Searching for ' . $track->toSearchString(), [
                 'status' => $response->status(),
