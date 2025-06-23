@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Helpers\Track;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
@@ -36,12 +37,12 @@ class YouTubeApi extends StreamingServiceApi
 
     private function ensureFreshToken(): void
     {
-        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
+        if (abs(Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at))) > 60) {
             $this->maybeRefreshToken();
         }
     }
 
-    private function httpClient()
+    private function httpClient(): PendingRequest
     {
         $this->ensureFreshToken();
         return Http::withToken($this->oauthCredential->token)->baseUrl(self::BASE_URL);
