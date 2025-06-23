@@ -68,24 +68,46 @@ class TidalApi extends StreamingServiceApi
             ]);
 
         $createPlaylistJson = $createPlaylistResponse->json();
+        $remotePlaylistId = Arr::get($createPlaylistJson, 'data.id');
+        Log::info('created playlist ' . $remotePlaylistId);
 
-        $remoteId = Arr::get($createPlaylistJson, 'data.id');
-
-        collect($tracks)->each(function (Track $track) {
-            sleep(1);
+        collect($tracks)->each(function (Track $track) use ($remotePlaylistId) {
+            sleep(2);
             $response = Http::withToken($this->oauthCredential->token)
                 ->get(
                     self::BASE_URL . '/searchResults/' . $track->toSearchString(),
                     ['countryCode' => 'US', 'include' => 'tracks']
                 );
+            $json = $response->json();
 
-            Log::info('Searching for ' . $track->toSearchString(), [
-                'status' => $response->status(),
-                'json'   => $response->json(),
+            $remoteTrackId = Arr::get($json, 'included.0.id');
+            $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
+            Log::info('Searching for ' . $track->toSearchString(),
+                ['remoteId' => $remoteTrackId, 'status' => $response->status()]
+            );
+
+            if (!$remoteTrackId) {
+                return;
+            }
+
+            sleep(2);
+            $addToPlaylistResponse = Http::withToken($this->oauthCredential->token)
+                ->post(self::BASE_URL . "/playlists/$remotePlaylistId/relationships/items", [
+                    'data' => [[
+                        'id'   => $remoteTrackId,
+                        'type' => 'tracks',
+                        'meta' => [
+                            'itemId' => $trackingUuid
+                        ]
+                    ]]
+                ]);
+
+            Log::info('Attempting to add track ' . $remoteTrackId . ' to ' . $remotePlaylistId, [
+                'status' => $addToPlaylistResponse->status(),
             ]);
         });
 
-        return 'snickers';
+        return $remotePlaylistId;
     }
 
     public function maybeRefreshToken(): void
