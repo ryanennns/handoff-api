@@ -58,7 +58,7 @@ class TidalApi extends StreamingServiceApi
         $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/playlists', [
                 'data' => [
-                    'type'       => 'playlist',
+                    'type'       => 'playlists',
                     'attributes' => [
                         'name'        => $name,
                         'description' => '',
