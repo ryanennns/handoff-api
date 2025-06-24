@@ -58,6 +58,8 @@ class TidalOauthController extends Controller
         $code = $request->query('code');
         $codeVerifier = Cache::pull("oauth:tidal:state:{$state}");
 
+        Log::info('Tidal OAUTH State', ['state' => $state]);
+
         $response = Http::asForm()->post("https://auth.tidal.com/v1/oauth2/token", [
             'grant_type'    => 'authorization_code',
             'client_id'     => Config::get("services.{$provider}.client_id"),

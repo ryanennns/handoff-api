@@ -16,7 +16,7 @@ abstract class StreamingServiceApi
         }
     }
 
-    abstract public function refreshToken(): void;
+    abstract public function maybeRefreshToken(): void;
 
     abstract public function getPlaylists(): array;
 

@@ -13,7 +13,6 @@ class Track
     public ?bool $explicit;
     public ?array $album;
 
-
     public function __construct(array $contents)
     {
         $this->source = Arr::get($contents, 'source');
@@ -22,5 +21,10 @@ class Track
         $this->artists = Arr::get($contents, 'artists');
         $this->explicit = Arr::get($contents, 'explicit') ?? false;
         $this->album = Arr::get($contents, 'album');
+    }
+
+    public function toSearchString(): string
+    {
+        return $this->artists[0] . ' ' . $this->name;
     }
 }

@@ -58,7 +58,7 @@ class TidalApi extends StreamingServiceApi
         $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/playlists', [
                 'data' => [
-                    'type'       => 'playlist',
+                    'type'       => 'playlists',
                     'attributes' => [
                         'name'        => $name,
                         'description' => '',
@@ -67,15 +67,50 @@ class TidalApi extends StreamingServiceApi
                 ]
             ]);
 
-        Log::info('Tidal API Playlist Creation', [
-            'status' => $createPlaylistResponse->status(),
-            'json'   => $createPlaylistResponse->json(),
-        ]);
+        $createPlaylistJson = $createPlaylistResponse->json();
+        $remotePlaylistId = Arr::get($createPlaylistJson, 'data.id');
+        Log::info('created playlist ' . $remotePlaylistId);
 
-        return 'snickers';
+        collect($tracks)->each(function (Track $track) use ($remotePlaylistId) {
+            sleep(2);
+            $response = Http::withToken($this->oauthCredential->token)
+                ->get(
+                    self::BASE_URL . '/searchResults/' . $track->toSearchString(),
+                    ['countryCode' => 'US', 'include' => 'tracks']
+                );
+            $json = $response->json();
+
+            $remoteTrackId = Arr::get($json, 'included.0.id');
+            $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
+            Log::info('Searching for ' . $track->toSearchString(),
+                ['remoteId' => $remoteTrackId, 'status' => $response->status()]
+            );
+
+            if (!$remoteTrackId) {
+                return;
+            }
+
+            sleep(2);
+            $addToPlaylistResponse = Http::withToken($this->oauthCredential->token)
+                ->post(self::BASE_URL . "/playlists/$remotePlaylistId/relationships/items", [
+                    'data' => [[
+                        'id'   => $remoteTrackId,
+                        'type' => 'tracks',
+                        'meta' => [
+                            'itemId' => $trackingUuid
+                        ]
+                    ]]
+                ]);
+
+            Log::info('Attempting to add track ' . $remoteTrackId . ' to ' . $remotePlaylistId, [
+                'status' => $addToPlaylistResponse->status(),
+            ]);
+        });
+
+        return $remotePlaylistId;
     }
 
-    public function refreshToken(): void
+    public function maybeRefreshToken(): void
     {
         $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
             'grant_type'    => 'refresh_token',
