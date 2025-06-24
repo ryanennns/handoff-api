@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Helpers\Track;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
@@ -17,7 +18,7 @@ class YouTubeApi extends StreamingServiceApi
     public const PROVIDER = 'youtube';
     private const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-    public function refreshToken(): void
+    public function maybeRefreshToken(): void
     {
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'grant_type'    => 'refresh_token',
@@ -34,14 +35,28 @@ class YouTubeApi extends StreamingServiceApi
         $this->oauthCredential->update(['token' => $accessToken]);
     }
 
-    private function makeRequest(string $endpoint, array $params = []): PromiseInterface|Response
+    private function ensureFreshToken(): void
     {
-        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
-            $this->refreshToken();
+        if (abs(Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at))) > 60) {
+            $this->maybeRefreshToken();
         }
+    }
 
-        $response = Http::withToken($this->oauthCredential->token)
-            ->get(self::BASE_URL . $endpoint, $params);
+    private function httpClient(): PendingRequest
+    {
+        $this->ensureFreshToken();
+        return Http::withToken($this->oauthCredential->token)->baseUrl(self::BASE_URL);
+    }
+
+    private function makeRequest(string $method, string $endpoint, array $params = []): PromiseInterface|Response
+    {
+        $client = $this->httpClient();
+
+        $response = match (strtolower($method)) {
+            'get' => $client->get($endpoint, $params),
+            'post' => $client->post($endpoint, $params),
+            default => throw new RuntimeException('Unsupported HTTP method'),
+        };
 
         if ($response->failed()) {
             throw new RuntimeException('Failed to make request to YouTube API: ' . $response->body());
@@ -52,7 +67,7 @@ class YouTubeApi extends StreamingServiceApi
 
     public function getPlaylists(): array
     {
-        $response = $this->makeRequest('/playlists', [
+        $response = $this->makeRequest('get', '/playlists', [
             'mine'       => 'true',
             'part'       => 'id,snippet,contentDetails',
             'maxResults' => 50,
@@ -73,7 +88,7 @@ class YouTubeApi extends StreamingServiceApi
 
     public function getPlaylistTracks(string $playlistId): array
     {
-        $response = $this->makeRequest('/playlistItems', [
+        $response = $this->makeRequest('get', '/playlistItems', [
             'playlistId' => $playlistId,
             'part'       => 'snippet,contentDetails',
             'maxResults' => 50,
@@ -96,21 +111,73 @@ class YouTubeApi extends StreamingServiceApi
 
     public function createPlaylist(string $name, array $tracks): string
     {
-        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
-            $this->refreshToken();
-        }
+        $createResponse = $this->makeRequest('post', '/playlists?part=snippet,status', [
+            'snippet' => [
+                'title'       => $name,
+                'description' => 'Created via API',
+            ],
+            'status'  => [
+                'privacyStatus' => 'private',
+            ],
+        ]);
 
-        $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
-            ->post(self::BASE_URL . '/playlists', [
-                'snippet' => [
-                    'title' => $name,
-                ]
-            ]);
+        $youtubePlaylistId = Arr::get($createResponse->json(), 'id');
+        $client = $this->httpClient();
 
-        $json = $createPlaylistResponse->json();
+        $youtubeTrackIds = [];
+        $failedTracks = [];
 
-        Log::info('YouTube API Create Playlist response', $json);
+        collect($tracks)->unique(fn($track) => $track->toSearchString())->each(function (Track $track) use ($client, &$youtubeTrackIds, &$failedTracks) {
+            try {
+                $searchResponse = $client->get('/search', [
+                    'q'               => $track->toSearchString(),
+                    'order'           => 'relevance',
+                    'videoCategoryId' => 10,
+                    'type'            => 'video',
+                    'maxResults'      => 1,
+                    'part'            => 'snippet',
+                ]);
 
-        return 'snickers';
+                $videoId = Arr::get($searchResponse->json(), 'items.0.id.videoId');
+
+                if ($videoId) {
+                    $youtubeTrackIds[] = $videoId;
+                } else {
+                    $failedTracks[] = $track;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('YouTube search failed', ['track' => $track->toSearchString(), 'error' => $e->getMessage()]);
+                $failedTracks[] = $track;
+            }
+
+            usleep(200000); // 200ms delay
+        });
+
+        Log::info('Writing video IDs into playlist', [
+            'playlistId'   => $youtubePlaylistId,
+            'videoIds'     => $youtubeTrackIds,
+            'failedTracks' => $failedTracks,
+        ]);
+
+        collect($youtubeTrackIds)
+            ->filter()
+            ->each(function ($videoId) use ($client, $youtubePlaylistId) {
+                try {
+                    $client->post('/playlistItems?part=snippet', [
+                        'snippet' => [
+                            'playlistId' => $youtubePlaylistId,
+                            'resourceId' => [
+                                'kind'    => 'youtube#video',
+                                'videoId' => $videoId,
+                            ],
+                        ],
+                    ]);
+                    usleep(200000); // 200ms delay
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to insert video into playlist', ['videoId' => $videoId, 'error' => $e->getMessage()]);
+                }
+            });
+
+        return $youtubePlaylistId;
     }
 }

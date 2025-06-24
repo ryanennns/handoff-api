@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -57,6 +58,15 @@ class GeneralOauthController extends Controller
         $oauthUser = Socialite::driver($provider)->user();
 
         $user = User::query()->firstOrCreate(['id' => $userId]);
+
+        Log::info($provider . ' Oauth Flow', [
+            'provider'      => $provider,
+            'provider_id'   => $oauthUser->getId(),
+            'email'         => $oauthUser->getEmail(),
+            'token'         => $oauthUser->token,
+            'refresh_token' => $oauthUser->refreshToken,
+        ]);
+
         $user->oauthCredentials()->updateOrCreate([
             'provider' => $provider,
             'email'    => $oauthUser->getEmail(),

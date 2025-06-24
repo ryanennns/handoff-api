@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\OauthCredential;
+use App\Models\PlaylistTransfer;
 use App\Observers\OauthCredentialObserver;
+use App\Observers\PlaylistTransferObserver;
 use App\Providers\Socialite\TidalProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         OauthCredential::observe(OauthCredentialObserver::class);
+        PlaylistTransfer::observe(PlaylistTransferObserver::class);
 
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('spotify', SpotifyProvider::class);

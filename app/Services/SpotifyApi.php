@@ -18,28 +18,31 @@ class SpotifyApi extends StreamingServiceApi
     public const PROVIDER = 'spotify';
     private const BASE_URL = 'https://api.spotify.com/v1';
 
-    public function refreshToken(): void
+    public function maybeRefreshToken(): void
     {
-        $response = Http::asForm()->post('https://accounts.spotify.com/api/token', [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $this->oauthCredential->refresh_token,
-            'client_id'     => Config::get('services.spotify.client_id'),
-            'client_secret' => COnfig::get('services.spotify.client_secret'),
-        ]);
+        $meResponse = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . '/me');
 
-        if ($response->failed()) {
-            throw new RuntimeException('Failed to refresh Spotify access token: ' . $response->body());
+        if ($meResponse->getStatusCode() !== 200) {
+            $response = Http::asForm()->post('https://accounts.spotify.com/api/token', [
+                'grant_type'    => 'refresh_token',
+                'refresh_token' => $this->oauthCredential->refresh_token,
+                'client_id'     => Config::get('services.spotify.client_id'),
+                'client_secret' => COnfig::get('services.spotify.client_secret'),
+            ]);
+
+            if ($response->failed()) {
+                throw new RuntimeException('Failed to refresh Spotify access token: ' . $response->body());
+            }
+
+            $accessToken = Arr::get($response->json(), 'access_token');
+            $this->oauthCredential->update(['token' => $accessToken]);
         }
-
-        $accessToken = Arr::get($response->json(), 'access_token');
-        $this->oauthCredential->update(['token' => $accessToken]);
     }
 
     private function makeRequest(string $endpoint, array $params = []): PromiseInterface|Response
     {
-        if (Carbon::now()->diffInMinutes(Carbon::parse($this->oauthCredential->updated_at)) > 60) {
-            $this->refreshToken();
-        }
+        $this->maybeRefreshToken();
 
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . $endpoint, $params);
@@ -78,7 +81,8 @@ class SpotifyApi extends StreamingServiceApi
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'track.uri'),
                 'name'      => Arr::get($item, 'track.name'),
-                'artists'   => Arr::get($item, 'track.artists'),
+                'artists'   => collect(Arr::get($item, 'track.artists'))
+                    ->map(fn($artist) => $artist['name'])->toArray(),
                 'explicit'  => Arr::get($item, 'track.explicit'),
                 'album'     => [
                     'id'     => Arr::get($item, 'track.album.id'),
