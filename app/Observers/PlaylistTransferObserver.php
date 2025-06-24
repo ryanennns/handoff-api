@@ -11,7 +11,7 @@ class PlaylistTransferObserver
     public function updated(PlaylistTransfer $playlistTransfer)
     {
         if ($playlistTransfer->isDirty('status')) {
-            Broadcast::event(new PlaylistTransferStatusUpdated($playlistTransfer));
+            PlaylistTransferStatusUpdated::dispatch($playlistTransfer);
         }
     }
 }
