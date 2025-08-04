@@ -22,8 +22,6 @@ class TidalApi extends StreamingServiceApi
 
         $json = $playlistResponse->json();
 
-        Log::error('Tidal GET Playlist API Response', $json);
-
         return collect(Arr::get($json, 'data', []))
             ->map(function ($item) {
                 $tracksUrl = Arr::get($item, 'relationships.items.links.self');
@@ -67,9 +65,24 @@ class TidalApi extends StreamingServiceApi
                 ]
             ]);
 
+        if ($createPlaylistResponse->failed()) {
+            Log::error('Tidal Playlist API Error', [
+                'response' => $createPlaylistResponse->json(),
+                'payload'  => [
+                    'data' => [
+                        'type'       => 'playlists',
+                        'attributes' => [
+                            'name'        => $name,
+                            'description' => '',
+                            'privacy'     => 'public',
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
         $createPlaylistJson = $createPlaylistResponse->json();
         $remotePlaylistId = Arr::get($createPlaylistJson, 'data.id');
-        Log::info('created playlist ' . $remotePlaylistId);
 
         collect($tracks)->each(function (Track $track) use ($remotePlaylistId) {
             sleep(2);
@@ -82,9 +95,6 @@ class TidalApi extends StreamingServiceApi
 
             $remoteTrackId = Arr::get($json, 'included.0.id');
             $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
-            Log::info('Searching for ' . $track->toSearchString(),
-                ['remoteId' => $remoteTrackId, 'status' => $response->status()]
-            );
 
             if (!$remoteTrackId) {
                 return;
@@ -102,9 +112,20 @@ class TidalApi extends StreamingServiceApi
                     ]]
                 ]);
 
-            Log::info('Attempting to add track ' . $remoteTrackId . ' to ' . $remotePlaylistId, [
-                'status' => $addToPlaylistResponse->status(),
-            ]);
+            if ($addToPlaylistResponse->failed()) {
+                Log::error('Tidal Track API Error', [
+                    'response' => $response->json(),
+                    'payload'  => [
+                        'data' => [[
+                            'id'   => $remoteTrackId,
+                            'type' => 'tracks',
+                            'meta' => [
+                                'itemId' => $trackingUuid
+                            ]
+                        ]]
+                    ],
+                ]);
+            }
         });
 
         return $remotePlaylistId;
