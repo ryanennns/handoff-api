@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleOauthController extends Controller
@@ -34,6 +35,6 @@ class GoogleOauthController extends Controller
         ]);
 
         $user->tokens()->delete();
-        return redirect('http://127.0.0.1:5173/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
+        return redirect(Config::get('app.client_url') . '/dashboard?token=' . $user->createToken('auth_token')->plainTextToken);
     }
 }

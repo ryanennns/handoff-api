@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
@@ -78,6 +79,6 @@ class GeneralOauthController extends Controller
             'refresh_token' => $oauthUser->refreshToken,
         ]);
 
-        return redirect('http://127.0.0.1:5173/close');
+        return redirect(Config::get('app.client_url') . '/close');
     }
 }

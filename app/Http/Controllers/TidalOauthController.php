@@ -100,6 +100,6 @@ class TidalOauthController extends Controller
             'expires_at'    => now()->addSeconds($expiresIn),
         ]);
 
-        return redirect('http://127.0.0.1:5173/close');
+        return redirect(Config::get('app.client_url') . '/close');
     }
 }
