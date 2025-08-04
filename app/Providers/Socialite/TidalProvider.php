@@ -4,6 +4,7 @@ namespace App\Providers\Socialite;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use SocialiteProviders\Manager\Contracts\OAuth2\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
@@ -19,7 +20,7 @@ class TidalProvider extends AbstractProvider implements ProviderInterface
         $verifier = $this->base64urlEncode(pack('H*', $random));
         $codeChallenge = $this->base64urlEncode(pack('H*', hash('sha256', $verifier)));
 
-        Cache::put("oauth:tidal:state:{$state}", $verifier, 5);
+        Cache::put("oauth:tidal:state:$state", $verifier);
         $query = http_build_query([
             'response_type'         => 'code',
             'client_id'             => $clientId,

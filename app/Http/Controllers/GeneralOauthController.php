@@ -53,7 +53,7 @@ class GeneralOauthController extends Controller
     public function callback(string $provider, Request $request)
     {
         $state = $request->query('state');
-        $userId = Cache::pull("oauth:state:$state");
+        $userId = Cache::get("oauth:state:$state");
 
         $oauthUser = Socialite::driver($provider)->user();
 

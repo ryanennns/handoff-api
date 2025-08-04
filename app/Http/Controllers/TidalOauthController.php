@@ -35,7 +35,7 @@ class TidalOauthController extends Controller
         }
 
         if ($state) {
-            Cache::put("oauth:state:{$state}", $userId, now()->addMinutes(1));
+            Cache::put("oauth:state:$state", $userId, now()->addMinutes(1));
         }
 
         return redirect($targetUrl);
@@ -56,9 +56,7 @@ class TidalOauthController extends Controller
         $state = $request->query('state');
         $userId = Cache::pull("oauth:state:$state");
         $code = $request->query('code');
-        $codeVerifier = Cache::pull("oauth:tidal:state:{$state}");
-
-        Log::info('Tidal OAUTH State', ['state' => $state]);
+        $codeVerifier = Cache::pull("oauth:tidal:state:$state");
 
         $response = Http::asForm()->post("https://auth.tidal.com/v1/oauth2/token", [
             'grant_type'    => 'authorization_code',
@@ -82,7 +80,7 @@ class TidalOauthController extends Controller
         $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
 
         if ($userResponse->failed()) {
-            Log::info('Tidal User API Error', $response->json());
+            Log::error('Tidal User API Error', $response->json());
             return redirect('/api/dumping-ground')->withErrors(['error' => 'Failed to retrieve user information']);
         }
 
