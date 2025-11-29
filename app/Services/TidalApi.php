@@ -101,11 +101,21 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
-            Log::info('track search info ' . $track->toSearchString(), [
-                'response' => $json,
-            ]);
+            $first = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
+                $name = Arr::get($instance, 'attributes.title');
+                if ($name === $track->name) {
+                    return true;
+                }
 
-            $remoteTrackId = Arr::get($json, 'included.0.id');
+                return false;
+            }));
+
+            if (!$first) {
+                Log::error('Tidal Playlist API Error - could not find song ' . $track->toSearchString(), []);
+                return;
+            }
+
+            $remoteTrackId = Arr::get($first, 'id');
             $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
 
             if (!$remoteTrackId) {
