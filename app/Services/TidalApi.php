@@ -106,10 +106,11 @@ class TidalApi extends StreamingServiceApi
             $json = $response->json();
 
             $firstMatchingTrack = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
-                $name = Arr::get($instance, 'attributes.title');
+                $candidateSongName = Arr::get($instance, 'attributes.title');
+                $candidateSongVersion = Arr::get($instance, 'attributes.version');
                 $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
 
-                if ($name !== $track->name) {
+                if ($candidateSongName !== $track->name || $candidateSongVersion) {
                     return false;
                 }
 
@@ -125,8 +126,11 @@ class TidalApi extends StreamingServiceApi
                         self::BASE_URL . '/artists/' . Arr::get($response->json(), 'data.0.id'),
                     );
 
-                $artistName = Arr::get($response->json(), 'data.attributes.name');
-                $artistsMatch = collect($track->artists)->contains($artistName);
+                $candidateArtist = Arr::get($response->json(), 'data.attributes.name');
+
+                $artistsMatch = collect($track->artists)->contains(
+                    fn($artist) => levenshtein($artist, $candidateArtist) < 2
+                );
 
                 if (!$artistsMatch) {
                     return false;
