@@ -28,16 +28,13 @@ class TidalApi extends StreamingServiceApi
     {
         $playlistResponse = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/playlists', [
-                'countryCode'         => 'CA',
+                'countryCode'         => 'CA', // todo whatado about this :/
                 'filter[r.owners.id]' => $this->oauthCredential->provider_id,
             ]);
 
-        $json = $playlistResponse->json();
-
-        return collect(Arr::get($json, 'data', []))
+        return collect(Arr::get($playlistResponse->json(), 'data', []))
             ->map(function ($item) {
                 $tracksUrl = Arr::get($item, 'relationships.items.links.self');
-
                 $tracksResponse = Http::withToken($this->oauthCredential->token)
                     ->get(self::BASE_URL . '/' . $tracksUrl);
 
@@ -105,7 +102,7 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
-            $firstMatchingTrack = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
+            $firstMatchingTrack = collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
                 $candidateSongName = Arr::get($instance, 'attributes.title');
                 $candidateSongVersion = Arr::get($instance, 'attributes.version');
                 $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
@@ -132,15 +129,15 @@ class TidalApi extends StreamingServiceApi
                 $candidateArtist = Arr::get($response->json(), 'data.attributes.name');
 
                 $artistsMatch = collect($track->artists)->contains(
-                    fn($artist) => levenshtein($artist, $candidateArtist) < 2
+                    fn($a) => levenshtein($a, $candidateArtist) < 2
+                        && levenshtein(strtolower($a), $candidateArtist) < 2
                 );
-
                 if (!$artistsMatch) {
                     return false;
                 }
 
                 return true;
-            }));
+            });
 
             if (!$firstMatchingTrack) {
                 Log::error('Tidal Playlist API Error - could not find song ' . $track->toSearchString(), []);
