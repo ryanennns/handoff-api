@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\Track;
 use App\Models\OauthCredential;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -179,6 +180,10 @@ class TidalApi extends StreamingServiceApi
 
     public function maybeRefreshToken(): void
     {
+        if (now() < Carbon::parse($this->oauthCredential->expires_at)->subMinutes(2)) {
+            return;
+        }
+
         $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
             'grant_type'    => 'refresh_token',
             'refresh_token' => $this->oauthCredential->refresh_token,
