@@ -76,8 +76,6 @@ class TidalOauthController extends Controller
         $refreshToken = Arr::get($json, 'refresh_token');
         $expiresIn = Arr::get($json, 'expires_in');
 
-        Log::info('json', $json);
-
         // todo get the country code off this and store it with the credentials
         $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
 
