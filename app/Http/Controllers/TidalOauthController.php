@@ -76,6 +76,8 @@ class TidalOauthController extends Controller
         $refreshToken = Arr::get($json, 'refresh_token');
         $expiresIn = Arr::get($json, 'expires_in');
 
+        Log::info('json', $json);
+
         // todo get the country code off this and store it with the credentials
         $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
 
@@ -87,6 +89,10 @@ class TidalOauthController extends Controller
         $userData = $userResponse->json();
         $tidalUserId = Arr::get($userData, 'data.id');
         $tidalEmail = Arr::get($userData, 'data.attributes.email');
+
+        if (!$accessToken || !$refreshToken) {
+            throw new \Exception("Missing tokens from Tidal OAuth response");
+        }
 
         $user = User::query()->firstOrCreate(['id' => $userId]);
         $user->oauthCredentials()->updateOrCreate([
