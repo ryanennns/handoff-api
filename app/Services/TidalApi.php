@@ -101,21 +101,41 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
-            $first = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
+            $firstMatchingTrack = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
                 $name = Arr::get($instance, 'attributes.title');
-                if ($name === $track->name) {
-                    return true;
+                $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
+                if ($name !== $track->name) {
+                    return false;
                 }
 
-                return false;
+                sleep(1);
+                $response = Http::withToken($this->oauthCredential->token)
+                    ->get(
+                        self::BASE_URL . $primaryArtistLink
+                    );
+
+                sleep(1);
+                $response = Http::withToken($this->oauthCredential->token)
+                    ->get(
+                        self::BASE_URL . '/artists/' . Arr::get($response->json(), 'data.0.id'),
+                    );
+
+                $artistName = Arr::get($response->json(), 'data.attributes.name');
+                $artistsMatch = collect($track->artists)->contains($artistName);
+
+                if (!$artistsMatch) {
+                    return false;
+                }
+
+                return true;
             }));
 
-            if (!$first) {
+            if (!$firstMatchingTrack) {
                 Log::error('Tidal Playlist API Error - could not find song ' . $track->toSearchString(), []);
                 return;
             }
 
-            $remoteTrackId = Arr::get($first, 'id');
+            $remoteTrackId = Arr::get($firstMatchingTrack, 'id');
             $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
 
             if (!$remoteTrackId) {
