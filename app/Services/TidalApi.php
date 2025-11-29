@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Helpers\Track;
 use App\Models\OauthCredential;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -103,8 +104,6 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
-            dd(json_encode($json));
-
             $firstMatchingTrack = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
                 $name = Arr::get($instance, 'attributes.title');
                 $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
@@ -183,6 +182,7 @@ class TidalApi extends StreamingServiceApi
         $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
             'grant_type'    => 'refresh_token',
             'refresh_token' => $this->oauthCredential->refresh_token,
+            'client_id'     => Config::get("services.tidal.client_id"),
         ]);
 
         if ($response->failed()) {
