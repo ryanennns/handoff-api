@@ -23,8 +23,13 @@ class Track
         $this->album = Arr::get($contents, 'album');
     }
 
+    public function trimmedName(): string
+    {
+        return trim(explode('(feat.', $this->name)[0]);
+    }
+
     public function toSearchString(): string
     {
-        return $this->artists[0] . ' ' . trim(explode('(feat.', $this->name)[0]);
+        return $this->artists[0] . ' ' . $this->trimmedName();
     }
 }

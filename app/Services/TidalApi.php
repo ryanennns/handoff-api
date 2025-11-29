@@ -110,7 +110,10 @@ class TidalApi extends StreamingServiceApi
                 $candidateSongVersion = Arr::get($instance, 'attributes.version');
                 $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
 
-                if ($candidateSongName !== $track->name || $candidateSongVersion) {
+                if (
+                    ($candidateSongName !== $track->name && $candidateSongName !== $track->trimmedName())
+                    || $candidateSongVersion
+                ) {
                     return false;
                 }
 
