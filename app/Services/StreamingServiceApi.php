@@ -27,6 +27,11 @@ abstract class StreamingServiceApi
 
     abstract public function createPlaylist(string $name, array $tracks): string;
 
+    /** @returns Track[] */
+    abstract public function searchTrack(Track $track): array;
+
+    abstract public function addTrackToPlaylist(string $playlistId, Track $track): void;
+
     public static function getServiceForProvider(
         string          $provider,
         OauthCredential $credential

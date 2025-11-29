@@ -11,11 +11,9 @@ abstract class TestCase extends BaseTestCase
 
     public function user()
     {
-        if (isset($this->user)) {
-            return $this->user;
+        if (!isset($this->user)) {
+            $this->user = User::factory()->create();
         }
-
-        $this->user = User::factory()->create();
 
         return $this->user;
     }

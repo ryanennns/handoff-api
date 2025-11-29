@@ -91,95 +91,8 @@ class TidalApi extends StreamingServiceApi
         }
 
         $createPlaylistJson = $createPlaylistResponse->json();
-        $remotePlaylistId = Arr::get($createPlaylistJson, 'data.id');
 
-        collect($tracks)->each(function (Track $track) use ($remotePlaylistId) {
-            sleep(2);
-            $response = Http::withToken($this->oauthCredential->token)
-                ->get(
-                    self::BASE_URL . '/searchResults/' . $track->toSearchString(),
-                    ['countryCode' => 'US', 'include' => 'tracks']
-                );
-            $json = $response->json();
-
-            $firstMatchingTrack = collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
-                $candidateSongName = Arr::get($instance, 'attributes.title');
-                $candidateSongVersion = Arr::get($instance, 'attributes.version');
-                $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
-
-                if (
-                    ($candidateSongName !== $track->name && $candidateSongName !== $track->trimmedName())
-                    || $candidateSongVersion
-                ) {
-                    return false;
-                }
-
-                sleep(1);
-                $response = Http::withToken($this->oauthCredential->token)
-                    ->get(
-                        self::BASE_URL . $primaryArtistLink
-                    );
-
-                sleep(1);
-                $response = Http::withToken($this->oauthCredential->token)
-                    ->get(
-                        self::BASE_URL . '/artists/' . Arr::get($response->json(), 'data.0.id'),
-                    );
-
-                $candidateArtist = Arr::get($response->json(), 'data.attributes.name');
-
-                $artistsMatch = collect($track->artists)->contains(
-                    fn($a) => levenshtein($a, $candidateArtist) < 2
-                        || levenshtein(strtolower($a), $candidateArtist) < 2
-                );
-                if (!$artistsMatch) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            if (!$firstMatchingTrack) {
-                Log::error('Tidal Playlist API Error - could not find song ' . $track->toSearchString(), []);
-                return;
-            }
-
-            $remoteTrackId = Arr::get($firstMatchingTrack, 'id');
-            $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
-
-            if (!$remoteTrackId) {
-                return;
-            }
-
-            sleep(2);
-            $addToPlaylistResponse = Http::withToken($this->oauthCredential->token)
-                ->post(self::BASE_URL . "/playlists/$remotePlaylistId/relationships/items", [
-                    'data' => [[
-                        'id'   => $remoteTrackId,
-                        'type' => 'tracks',
-                        'meta' => [
-                            'itemId' => $trackingUuid
-                        ]
-                    ]]
-                ]);
-
-            if ($addToPlaylistResponse->failed()) {
-                Log::error('Tidal Track API Error', [
-                    'response' => $response->json(),
-                    'payload'  => [
-                        'data' => [[
-                            'id'   => $remoteTrackId,
-                            'type' => 'tracks',
-                            'meta' => [
-                                'itemId' => $trackingUuid
-                            ]
-                        ]]
-                    ],
-                ]);
-            }
-        });
-
-        return $remotePlaylistId;
+        return Arr::get($createPlaylistJson, 'data.id');
     }
 
     public function maybeRefreshToken(): void
@@ -208,5 +121,48 @@ class TidalApi extends StreamingServiceApi
             'refresh_token' => $refreshToken,
             'expires_at'    => now()->addSeconds($expiresIn),
         ]);
+    }
+
+    public function searchTrack(Track $track): array
+    {
+        sleep(2);
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(
+                self::BASE_URL . '/searchResults/' . $track->toSearchString(),
+                ['countryCode' => 'US', 'include' => 'tracks']
+            );
+
+        $json = $response->json();
+        $results = Arr::get($json, 'included');
+        dump('collecting');
+        return collect($results)->map(function ($result) use(&$i, $track) {
+            return new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($result, 'id'),
+                'name'      => Arr::get($result, 'attributes.title'),
+            ]);
+        })->reject(fn($a) => $a === null)->toArray();
+    }
+
+    public function addTrackToPlaylist(string $playlistId, Track $track): void
+    {
+        $payload = [[
+            'id'   => $track->remote_id,
+            'type' => 'tracks',
+            'meta' => $track->meta,
+        ]];
+        $addToPlaylistResponse = Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . "/playlists/$playlistId/relationships/items", [
+                'data' => $payload
+            ]);
+
+        if ($addToPlaylistResponse->failed()) {
+            Log::error('Tidal Track API Error', [
+                'response' => $addToPlaylistResponse->json(),
+                'payload'  => [
+                    'data' => $payload
+                ],
+            ]);
+        }
     }
 }

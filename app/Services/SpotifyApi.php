@@ -139,4 +139,14 @@ class SpotifyApi extends StreamingServiceApi
 
         return $playlistUrl;
     }
+
+    public function searchTrack(Track $track): array
+    {
+        // TODO: Implement searchTrack() method.
+    }
+
+    public function addTrackToPlaylist(string $playlistId, Track $track): void
+    {
+        // TODO: Implement addTrackToPlaylist() method.
+    }
 }
