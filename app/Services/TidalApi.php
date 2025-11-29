@@ -130,7 +130,7 @@ class TidalApi extends StreamingServiceApi
 
                 $artistsMatch = collect($track->artists)->contains(
                     fn($a) => levenshtein($a, $candidateArtist) < 2
-                        && levenshtein(strtolower($a), $candidateArtist) < 2
+                        || levenshtein(strtolower($a), $candidateArtist) < 2
                 );
                 if (!$artistsMatch) {
                     return false;
