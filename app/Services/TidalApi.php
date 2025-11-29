@@ -93,6 +93,10 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
+            Log::info('track search info ' . $track->toSearchString(), [
+                'response' => $json,
+            ]);
+
             $remoteTrackId = Arr::get($json, 'included.0.id');
             $trackingUuid = Arr::get($json, 'data.attributes.trackingId');
 
