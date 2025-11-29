@@ -17,6 +17,8 @@ class TidalApi extends StreamingServiceApi
     {
         parent::__construct($oauthCredential);
 
+        $this->maybeRefreshToken();
+
         Log::info('oauth cred', ['token' => $oauthCredential->token]);
     }
 
@@ -101,9 +103,12 @@ class TidalApi extends StreamingServiceApi
                 );
             $json = $response->json();
 
+            dd(json_encode($json));
+
             $firstMatchingTrack = (collect(Arr::get($json, 'included'))->first(function ($instance) use ($track) {
                 $name = Arr::get($instance, 'attributes.title');
                 $primaryArtistLink = Arr::get($instance, 'relationships.artists.links.self');
+
                 if ($name !== $track->name) {
                     return false;
                 }

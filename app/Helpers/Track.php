@@ -21,6 +21,10 @@ class Track
         $this->artists = Arr::get($contents, 'artists');
         $this->explicit = Arr::get($contents, 'explicit') ?? false;
         $this->album = Arr::get($contents, 'album');
+
+        if (str_contains($this->name, '(feat.')) {
+            $this->name = trim(explode('(feat.', $this->name)[0]);
+        }
     }
 
     public function toSearchString(): string
