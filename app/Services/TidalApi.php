@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\Track;
+use App\Models\OauthCredential;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,13 @@ class TidalApi extends StreamingServiceApi
 {
     public const PROVIDER = 'tidal';
     public const BASE_URL = 'https://openapi.tidal.com/v2';
+
+    public function __construct(OauthCredential $oauthCredential)
+    {
+        parent::__construct($oauthCredential);
+
+        Log::info('oauth cred', ['token' => $oauthCredential->token]);
+    }
 
     public function getPlaylists(): array
     {
