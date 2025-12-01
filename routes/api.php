@@ -31,9 +31,6 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('redirect/{provider}', [GeneralOauthController::class, 'redirect']);
         Route::get('callback/{provider}', [GeneralOauthController::class, 'callback']);
     });
-
-    Route::post('login', LoginController::class)->name('login');
-    Route::post('register', RegisterController::class)->name('register');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
