@@ -83,7 +83,7 @@ class GetPlaylistsControllerTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('api/playlists')
-            ->assertStatus(302);
+            ->getJson('api/playlists')
+            ->assertUnprocessable();
     }
 }

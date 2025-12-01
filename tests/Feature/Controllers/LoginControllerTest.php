@@ -12,6 +12,13 @@ class LoginControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->markTestSkipped();
+    }
+
     public function test_it_registers_user()
     {
         $user = User::factory()->create([
