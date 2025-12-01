@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', GetPlaylistTransfersController::class)->name('index');
     });
 
-    Route::get('/services', GetACtiveServicesController::class)->name('services');
+    Route::get('/services', GetActiveServicesController::class)->name('services');
 
     Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
 });
