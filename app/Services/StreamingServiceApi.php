@@ -31,9 +31,9 @@ abstract class StreamingServiceApi
     ): ?StreamingServiceApi
     {
         return match ($provider) {
-            'spotify' => new SpotifyApi($credential),
-            'youtube' => new YouTubeApi($credential),
-            'tidal'   => new TidalApi($credential),
+            'spotify' => app(SpotifyApi::class, [$credential]),
+            'youtube' => app(YouTubeApi::class, [$credential]),
+            'tidal'   => app(TidalApi::class, [$credential]),
             default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
         };
     }
