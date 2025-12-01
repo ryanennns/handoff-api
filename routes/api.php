@@ -31,9 +31,6 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('redirect/{provider}', [GeneralOauthController::class, 'redirect']);
         Route::get('callback/{provider}', [GeneralOauthController::class, 'callback']);
     });
-
-    Route::post('login', LoginController::class)->name('login');
-    Route::post('register', RegisterController::class)->name('register');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -45,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', GetPlaylistTransfersController::class)->name('index');
     });
 
-    Route::get('/services', GetACtiveServicesController::class)->name('services');
+    Route::get('/services', GetActiveServicesController::class)->name('services');
 
     Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
 });
