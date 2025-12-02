@@ -144,6 +144,11 @@ class TidalApi extends StreamingServiceApi
         })->reject(fn($a) => $a === null)->toArray();
     }
 
+    public function fillMissingInfo(Track $track): Track
+    {
+        return $track;
+    }
+
     public function addTrackToPlaylist(string $playlistId, Track $track): void
     {
         $payload = [[

@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
 use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class PlaylistTransferJobTest extends TestCase
@@ -19,44 +20,18 @@ class PlaylistTransferJobTest extends TestCase
     use RefreshDatabase;
     use WithFaker;
 
-    public function test_it_snickers()
+    public MockInterface $tidalMock;
+    public MockInterface $spotifyMock;
+
+    protected function setUp(): void
     {
-        $tidalMock = Mockery::mock(TidalApi::class);
-        $spotifyMock = Mockery::mock(SpotifyApi::class);
+        parent::setUp();
 
-        $spotifyMock->shouldReceive('getPlaylistTracks')
-            ->andReturn([
-                new Track([
-                    'source'    => 'tidal',
-                    'remote_id' => $this->faker->uuid,
-                    'name'      => 'oh wow nice collab',
-                    'artists'   => ['2hollis', 'brakence']
-                ])
-            ]);
-        $tidalMock->shouldReceive('createPlaylist');
-        $tidalMock->shouldReceive('searchTrack')
-            ->andReturn([
-                new Track([
-                    'source'    => 'tidal',
-                    'remote_id' => $this->faker->uuid,
-                    'name'      => 'oh wow nice collab',
-                ])
-            ]);
+        $this->tidalMock = Mockery::mock(TidalApi::class);
+        $this->spotifyMock = Mockery::mock(SpotifyApi::class);
 
-        $spotifyMock->shouldReceive('fillArtistInfo')
-            ->andReturn([
-                new Track([
-                    'source'    => 'tidal',
-                    'remote_id' => $this->faker->uuid,
-                    'name'      => 'oh wow nice collab',
-                    'artists'   => ['2hollis', 'brakence']
-                ])
-            ]);
-
-        $tidalMock->shouldReceive('addTrackToPlaylist');
-
-        $this->app->bind(TidalApi::class, fn() => $tidalMock);
-        $this->app->bind(SpotifyApi::class, fn() => $spotifyMock);
+        $this->app->bind(TidalApi::class, fn() => $this->tidalMock);
+        $this->app->bind(SpotifyApi::class, fn() => $this->spotifyMock);
 
         OauthCredential::query()->create([
             'id'            => (string)Str::uuid(),
@@ -78,15 +53,75 @@ class PlaylistTransferJobTest extends TestCase
             'expires_at'    => now()->addHour(),
             'user_id'       => $this->user()->getKey(),
         ]);
+    }
 
-        (new PlaylistTransferJob(
-            PlaylistTransfer::factory()->create([
-                'source'      => SpotifyApi::PROVIDER,
-                'destination' => TidalApi::PROVIDER,
-                'user_id'     => $this->user()->getKey()
-            ])
-        ))->handle();
+    public function test_it_updates_status_to_in_progress_when_running()
+    {
+        $this->markTestIncomplete();
+    }
 
-        $this->assertTrue(true);
+    public function test_it_updates_status_to_failed_on_failure()
+    {
+        $this->spotifyMock->shouldReceive('getPlaylistTracks')
+            ->andThrow(new \Exception());
+
+        $this->app->bind(SpotifyApi::class, fn() => $this->spotifyMock);
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyApi::PROVIDER,
+            'destination' => TidalApi::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+        $job->refresh();
+        $this->assertEquals(PlaylistTransfer::STATUS_FAILED, $job->status);
+    }
+
+    public function test_it_updates_status_to_complete_on_completion()
+    {
+        $this->happyPathApiMocks();
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyApi::PROVIDER,
+            'destination' => TidalApi::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+        $job->refresh();
+        $this->assertEquals(PlaylistTransfer::STATUS_COMPLETED, $job->status);
+    }
+
+    public function happyPathApiMocks(): void
+    {
+        $this->spotifyMock->shouldReceive('getPlaylistTracks')
+            ->andReturn([
+                new Track([
+                    'source'    => 'tidal',
+                    'remote_id' => $this->faker->uuid,
+                    'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence']
+                ])
+            ]);
+        $this->tidalMock->shouldReceive('createPlaylist');
+        $this->tidalMock->shouldReceive('searchTrack')
+            ->andReturn([
+                new Track([
+                    'source'    => 'tidal',
+                    'remote_id' => $this->faker->uuid,
+                    'name'      => 'oh wow nice collab',
+                ])
+            ]);
+
+        $this->spotifyMock->shouldReceive('fillArtistInfo')
+            ->andReturn([
+                new Track([
+                    'source'    => 'tidal',
+                    'remote_id' => $this->faker->uuid,
+                    'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence']
+                ])
+            ]);
+
+        $this->tidalMock->shouldReceive('addTrackToPlaylist');
     }
 }

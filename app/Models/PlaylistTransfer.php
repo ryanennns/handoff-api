@@ -17,6 +17,11 @@ class PlaylistTransfer extends Model
 
     protected $casts = ['playlists' => 'json'];
 
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_FAILED = 'failed';
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
