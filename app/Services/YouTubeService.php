@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
-class YouTubeApi extends StreamingServiceApi
+class YouTubeService extends StreamingService
 {
     public const PROVIDER = 'youtube';
     private const BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -179,5 +179,16 @@ class YouTubeApi extends StreamingServiceApi
             });
 
         return $youtubePlaylistId;
+    }
+
+    public function addTrackToPlaylist(string $playlistId, Track $track): void
+    {
+        // TODO: Implement addTrackToPlaylist() method.
+    }
+
+    public function searchTrack(Track $track): array
+    {
+        // TODO: Implement searchTrack() method.
+        return [];
     }
 }

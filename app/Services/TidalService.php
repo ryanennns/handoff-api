@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class TidalApi extends StreamingServiceApi
+class TidalService extends StreamingService
 {
     public const PROVIDER = 'tidal';
     public const BASE_URL = 'https://openapi.tidal.com/v2';

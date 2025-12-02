@@ -6,8 +6,8 @@ use App\Helpers\Track;
 use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
 use App\Models\PlaylistTransfer;
-use App\Services\SpotifyApi;
-use App\Services\TidalApi;
+use App\Services\SpotifyService;
+use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
@@ -27,15 +27,15 @@ class PlaylistTransferJobTest extends TestCase
     {
         parent::setUp();
 
-        $this->tidalMock = Mockery::mock(TidalApi::class);
-        $this->spotifyMock = Mockery::mock(SpotifyApi::class);
+        $this->tidalMock = Mockery::mock(TidalService::class);
+        $this->spotifyMock = Mockery::mock(SpotifyService::class);
 
-        $this->app->bind(TidalApi::class, fn() => $this->tidalMock);
-        $this->app->bind(SpotifyApi::class, fn() => $this->spotifyMock);
+        $this->app->bind(TidalService::class, fn() => $this->tidalMock);
+        $this->app->bind(SpotifyService::class, fn() => $this->spotifyMock);
 
         OauthCredential::query()->create([
             'id'            => (string)Str::uuid(),
-            'provider'      => TidalApi::PROVIDER,
+            'provider'      => TidalService::PROVIDER,
             'provider_id'   => '1234567890',
             'email'         => 'example@gmail.com',
             'token'         => '$token',
@@ -45,7 +45,7 @@ class PlaylistTransferJobTest extends TestCase
         ]);
         OauthCredential::query()->create([
             'id'            => (string)Str::uuid(),
-            'provider'      => SpotifyApi::PROVIDER,
+            'provider'      => SpotifyService::PROVIDER,
             'provider_id'   => '1234567890',
             'email'         => 'example@gmail.com',
             'token'         => '$token',
@@ -65,11 +65,11 @@ class PlaylistTransferJobTest extends TestCase
         $this->spotifyMock->shouldReceive('getPlaylistTracks')
             ->andThrow(new \Exception());
 
-        $this->app->bind(SpotifyApi::class, fn() => $this->spotifyMock);
+        $this->app->bind(SpotifyService::class, fn() => $this->spotifyMock);
 
         $job = PlaylistTransfer::factory()->create([
-            'source'      => SpotifyApi::PROVIDER,
-            'destination' => TidalApi::PROVIDER,
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
         ]);
         (new PlaylistTransferJob($job))->handle();
@@ -82,8 +82,8 @@ class PlaylistTransferJobTest extends TestCase
         $this->happyPathApiMocks();
 
         $job = PlaylistTransfer::factory()->create([
-            'source'      => SpotifyApi::PROVIDER,
-            'destination' => TidalApi::PROVIDER,
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
         ]);
         (new PlaylistTransferJob($job))->handle();
@@ -112,15 +112,13 @@ class PlaylistTransferJobTest extends TestCase
                 ])
             ]);
 
-        $this->spotifyMock->shouldReceive('fillArtistInfo')
-            ->andReturn([
-                new Track([
-                    'source'    => 'tidal',
-                    'remote_id' => $this->faker->uuid,
-                    'name'      => 'oh wow nice collab',
-                    'artists'   => ['2hollis', 'brakence']
-                ])
-            ]);
+        $this->spotifyMock->shouldReceive('fillMissingInfo')
+            ->andReturn(new Track([
+                'source'    => 'tidal',
+                'remote_id' => $this->faker->uuid,
+                'name'      => 'oh wow nice collab',
+                'artists'   => ['2hollis', 'brakence']
+            ]));
 
         $this->tidalMock->shouldReceive('addTrackToPlaylist');
     }

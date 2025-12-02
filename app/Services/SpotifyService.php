@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
-class SpotifyApi extends StreamingServiceApi
+class SpotifyService extends StreamingService
 {
     public const PROVIDER = 'spotify';
     private const BASE_URL = 'https://api.spotify.com/v1';

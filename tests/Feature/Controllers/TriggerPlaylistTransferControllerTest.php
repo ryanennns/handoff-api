@@ -4,8 +4,8 @@ namespace Tests\Feature\Controllers;
 
 use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
-use App\Services\SpotifyApi;
-use App\Services\TidalApi;
+use App\Services\SpotifyService;
+use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,18 +21,18 @@ class TriggerPlaylistTransferControllerTest extends TestCase
 
         OauthCredential::query()->create([
             'user_id'     => $this->user()->getKey(),
-            'provider'    => TidalApi::PROVIDER,
-            'provider_id' => TidalApi::PROVIDER,
+            'provider'    => TidalService::PROVIDER,
+            'provider_id' => TidalService::PROVIDER,
         ]);
         OauthCredential::query()->create([
             'user_id'     => $this->user()->getKey(),
-            'provider'    => SpotifyApi::PROVIDER,
-            'provider_id' => SpotifyApi::PROVIDER,
+            'provider'    => SpotifyService::PROVIDER,
+            'provider_id' => SpotifyService::PROVIDER,
         ]);
 
         $this->actingAs($this->user())->post('api/playlist-transfers/trigger', [
-            'source'      => SpotifyApi::PROVIDER,
-            'destination' => TidalApi::PROVIDER,
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
             'playlists'   => ['playlist1', 'playlist2'],
         ])->assertCreated()->assertJsonStructure([
             'message',

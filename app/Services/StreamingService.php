@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Helpers\Track;
 use App\Models\OauthCredential;
 
-abstract class StreamingServiceApi
+abstract class StreamingService
 {
     public const PROVIDER = 'generic';
 
@@ -40,7 +40,7 @@ abstract class StreamingServiceApi
     public static function getServiceForProvider(
         string          $provider,
         OauthCredential $credential
-    ): ?StreamingServiceApi
+    ): ?StreamingService
     {
         return match ($provider) {
             'spotify' => app(SpotifyApi::class, ['oauthCredential' => $credential]),

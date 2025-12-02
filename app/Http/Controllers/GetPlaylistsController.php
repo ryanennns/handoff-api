@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\StreamingServiceApi;
+use App\Services\StreamingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +24,7 @@ class GetPlaylistsController extends Controller
             return response()->json(['message' => 'No OAuth credentials found'], 404);
         }
 
-        $api = StreamingServiceApi::getServiceForProvider(
+        $api = StreamingService::getServiceForProvider(
             $service,
             $user->oauthCredentials()
                 ->where('provider', $service)

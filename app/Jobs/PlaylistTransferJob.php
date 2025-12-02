@@ -29,32 +29,35 @@ class PlaylistTransferJob implements ShouldQueue
                 ->each(function ($playlist) use ($sourceApi, $destinationApi) {
                     $tracks = $sourceApi->getPlaylistTracks($playlist['id']);
                     $playlistId = $destinationApi->createPlaylist($playlist['name'], $tracks);
+                    $failedTracks = [];
 
-                    collect($tracks)->each(function ($track) use ($destinationApi, $sourceApi, $playlistId) {
+                    collect($tracks)->each(function ($track) use ($destinationApi, $sourceApi, $playlistId, &$failedTracks) {
                         $candidates = $destinationApi->searchTrack($track);
                         $candidates = collect($candidates)
                             ->reject(
                                 fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName()
+                            )->map(
+                                fn($c) => empty($c->artists) ? $sourceApi->fillMissingInfo($c) : $c
                             );
 
-                        // if any are missing artist info, fetch artist names for better matching
-                        if (
-                            $candidates->contains(fn($c) => empty($c->artists))
-                        ) {
-                            $candidates = $sourceApi->fillMissingInfo($track);
-                        }
 
                         $finalCandidate = collect($candidates)->first(
-                            fn($candidate) => collect($track->artists)
-                                ->contains(
-                                    fn($a) => levenshtein($a, $candidate->artists[0]) < 2
-                                        || levenshtein(strtolower($a), $candidate->artists[0]) < 2
-                                ));
+                            fn($candidate) => collect($track->artists)->contains(
+                                fn($a) => levenshtein($a, $candidate->artists[0]) < 2
+                                    || levenshtein(strtolower($a), $candidate->artists[0]) < 2
+                            )
+                        );
 
                         if ($finalCandidate) {
                             $destinationApi->addTrackToPlaylist($playlistId, $track);
                         }
+
+                        if (!$finalCandidate) {
+                            $failedTracks[] = $track;
+                        }
                     });
+
+                    // todo -- do something with failed tracks
                 });
         } catch (\Throwable $exception) {
             Log::error($exception->getMessage(), $exception->getTrace());

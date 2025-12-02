@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\StreamingServiceApi;
+use App\Services\StreamingService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,9 +27,9 @@ class PlaylistTransfer extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function sourceApi(): StreamingServiceApi
+    public function sourceApi(): StreamingService
     {
-        return StreamingServiceApi::getServiceForProvider(
+        return StreamingService::getServiceForProvider(
             $this->source,
             $this->user
                 ->oauthCredentials()
@@ -38,9 +38,9 @@ class PlaylistTransfer extends Model
         );
     }
 
-    public function destinationApi(): StreamingServiceApi
+    public function destinationApi(): StreamingService
     {
-        return StreamingServiceApi::getServiceForProvider(
+        return StreamingService::getServiceForProvider(
             $this->destination,
             $this->user
                 ->oauthCredentials()
