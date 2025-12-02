@@ -12,7 +12,9 @@ abstract class StreamingServiceApi
     public function __construct(protected readonly OauthCredential $oauthCredential)
     {
         if ($oauthCredential->provider !== static::PROVIDER) {
-            throw new \InvalidArgumentException("Invalid provider. Expected: " . static::PROVIDER);
+            throw new \InvalidArgumentException(
+                "Invalid provider. Expected: " . static::PROVIDER . ", received: " . $this->oauthCredential->provider
+            );
         }
     }
 
@@ -31,9 +33,9 @@ abstract class StreamingServiceApi
     ): ?StreamingServiceApi
     {
         return match ($provider) {
-            'spotify' => app(SpotifyApi::class, [$credential]),
-            'youtube' => app(YouTubeApi::class, [$credential]),
-            'tidal'   => app(TidalApi::class, [$credential]),
+            'spotify' => app(SpotifyApi::class, ['oauthCredential' => $credential]),
+            'youtube' => app(YouTubeApi::class, ['oauthCredential' => $credential]),
+            'tidal' => app(TidalApi::class, ['oauthCredential' => $credential]),
             default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
         };
     }
