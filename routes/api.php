@@ -5,8 +5,6 @@ use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
 use App\Http\Controllers\GetPlaylistTransfersController;
 use App\Http\Controllers\GoogleOauthController;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\TidalOauthController;
 use App\Http\Controllers\TriggerPlaylistTransferController;
 use Illuminate\Http\Request;
