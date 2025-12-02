@@ -24,6 +24,34 @@ class TidalService extends StreamingService
         Log::info('oauth cred', ['token' => $oauthCredential->token]);
     }
 
+    public function maybeRefreshToken(): void
+    {
+        if (now() < Carbon::parse($this->oauthCredential->expires_at)->subMinutes(2)) {
+            return;
+        }
+
+        $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $this->oauthCredential->refresh_token,
+            'client_id'     => Config::get("services.tidal.client_id"),
+        ]);
+
+        if ($response->failed()) {
+            throw new \RuntimeException('Failed to refresh Tidal access token: ' . $response->body());
+        }
+
+        $data = $response->json();
+        $accessToken = Arr::get($data, 'access_token');
+        $refreshToken = Arr::get($data, 'refresh_token');
+        $expiresIn = Arr::get($data, 'expires_in');
+
+        $this->oauthCredential->update([
+            'token'         => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_at'    => now()->addSeconds($expiresIn),
+        ]);
+    }
+
     public function getPlaylists(): array
     {
         $playlistResponse = Http::withToken($this->oauthCredential->token)
@@ -34,18 +62,10 @@ class TidalService extends StreamingService
 
         return collect(Arr::get($playlistResponse->json(), 'data', []))
             ->map(function ($item) {
-                $tracksUrl = Arr::get($item, 'relationships.items.links.self');
-                $tracksResponse = Http::withToken($this->oauthCredential->token)
-                    ->get(self::BASE_URL . '/' . $tracksUrl);
-
-                $tracksJson = $tracksResponse->json();
-                $tracks = collect(Arr::get($tracksJson, 'data', []))
-                    ->map(fn($track) => ['id' => Arr::get($track, 'id')]);
-
                 return [
                     'id'               => Arr::get($item, 'id'),
                     'name'             => Arr::get($item, 'attributes.name'),
-                    'tracks'           => $tracks,
+                    'tracks'           => [],
                     'owner'            => [
                         'display_name' => Arr::get($item, 'attributes.relationships.owners.data', ''),
                     ],
@@ -57,10 +77,26 @@ class TidalService extends StreamingService
 
     public function getPlaylistTracks(string $playlistId): array
     {
-        throw new \RuntimeException("Not implemented");
+        $tracksResponse = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . '/playlists/' . $playlistId . '/relationships/items', []);
+
+        $tracksJson = $tracksResponse->json();
+        return collect(Arr::get($tracksJson, 'data', []))
+            ->map(function ($item) {
+                sleep(0.25);
+                $trackResponse = Http::withToken($this->oauthCredential->token)
+                    ->get(self::BASE_URL . "/tracks/{$item['id']}");
+                $trackJson = $trackResponse->json();
+
+                return new Track([
+                    'source'    => self::PROVIDER,
+                    'remote_id' => Arr::get($trackJson, 'data.id'),
+                    'name'      => Arr::get($trackJson, 'data.attributes.title'),
+                ]);
+            })->toArray();
     }
 
-    public function createPlaylist(string $name, array $tracks): string
+    public function createPlaylist(string $name): string|false
     {
         $createPlaylistResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/playlists', [
@@ -92,82 +128,14 @@ class TidalService extends StreamingService
 
         $createPlaylistJson = $createPlaylistResponse->json();
 
+        if ($createPlaylistResponse->failed()) {
+            return false;
+        }
+
         return Arr::get($createPlaylistJson, 'data.id');
     }
 
-    public function maybeRefreshToken(): void
-    {
-        if (now() < Carbon::parse($this->oauthCredential->expires_at)->subMinutes(2)) {
-            return;
-        }
-
-        $response = Http::asForm()->post('https://auth.tidal.com/v1/oauth2/token', [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $this->oauthCredential->refresh_token,
-            'client_id'     => Config::get("services.tidal.client_id"),
-        ]);
-
-        if ($response->failed()) {
-            throw new \RuntimeException('Failed to refresh Tidal access token: ' . $response->body());
-        }
-
-        $data = $response->json();
-        $accessToken = Arr::get($data, 'access_token');
-        $refreshToken = Arr::get($data, 'refresh_token');
-        $expiresIn = Arr::get($data, 'expires_in');
-
-        $this->oauthCredential->update([
-            'token'         => $accessToken,
-            'refresh_token' => $refreshToken,
-            'expires_at'    => now()->addSeconds($expiresIn),
-        ]);
-    }
-
-    public function searchTrack(Track $track): array
-    {
-        sleep(2);
-        $response = Http::withToken($this->oauthCredential->token)
-            ->get(
-                self::BASE_URL . '/searchResults/' . $track->toSearchString(),
-                ['countryCode' => 'US', 'include' => 'tracks']
-            );
-
-        $json = $response->json();
-        $results = Arr::get($json, 'included');
-        return collect($results)->map(function ($candidate) use ($track) {
-            return new Track([
-                'source'    => self::PROVIDER,
-                'remote_id' => Arr::get($candidate, 'id'),
-                'name'      => Arr::get($candidate, 'attributes.title'),
-                'meta'      => [
-                    'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
-                ],
-            ]);
-        })->reject(fn($a) => $a === null)->toArray();
-    }
-
-    public function fillMissingInfo(Track $track): Track
-    {
-        $primaryArtistLink = $track->meta['primaryArtistLink'];
-
-        sleep(1);
-        $response = Http::withToken($this->oauthCredential->token)
-            ->get(
-                self::BASE_URL . $primaryArtistLink
-            );
-
-        sleep(1);
-        $response = Http::withToken($this->oauthCredential->token)
-            ->get(
-                self::BASE_URL . '/artists/' . Arr::get($response->json(), 'data.0.id'),
-            );
-
-        $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
-
-        return $track;
-    }
-
-    public function addTrackToPlaylist(string $playlistId, Track $track): void
+    public function addTrackToPlaylist(string $playlistId, Track $track): bool
     {
         $payload = [[
             'id'   => $track->remote_id,
@@ -186,6 +154,50 @@ class TidalService extends StreamingService
                     'data' => $payload
                 ],
             ]);
+            return false;
         }
+
+        return true;
+    }
+
+    public function searchTrack(Track $track): array
+    {
+        sleep(2);
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(
+                self::BASE_URL . '/searchResults/' . $track->toSearchString(),
+                ['countryCode' => 'US', 'include' => 'tracks']
+            );
+
+        $results = Arr::get($response->json(), 'included');
+        return collect($results)->map(function ($candidate) use ($track) {
+            return new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($candidate, 'id'),
+                'name'      => Arr::get($candidate, 'attributes.title'),
+                'meta'      => [
+                    'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
+                ],
+            ]);
+        })->reject(fn($a) => $a === null)->toArray();
+    }
+
+    public function fillMissingInfo(Track $track): Track
+    {
+        $primaryArtistLink = $track->meta['primaryArtistLink'];
+
+        sleep(1);
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . $primaryArtistLink);
+
+
+        sleep(1);
+        $artistId = Arr::get($response->json(), 'data.0.id');
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . "/artists/$artistId");
+
+        $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
+
+        return $track;
     }
 }
