@@ -109,7 +109,7 @@ class YouTubeService extends StreamingService
             ]))->toArray();
     }
 
-    public function createPlaylist(string $name, array $tracks): string
+    public function createPlaylist(string $name): string
     {
         $createResponse = $this->makeRequest('post', '/playlists?part=snippet,status', [
             'snippet' => [
@@ -181,8 +181,9 @@ class YouTubeService extends StreamingService
         return $youtubePlaylistId;
     }
 
-    public function addTrackToPlaylist(string $playlistId, Track $track): void
+    public function addTrackToPlaylist(string $playlistId, Track $track): bool
     {
+        return false;
         // TODO: Implement addTrackToPlaylist() method.
     }
 
@@ -190,5 +191,10 @@ class YouTubeService extends StreamingService
     {
         // TODO: Implement searchTrack() method.
         return [];
+    }
+
+    public function fillMissingInfo(Track $track): Track
+    {
+        return $track;
     }
 }
