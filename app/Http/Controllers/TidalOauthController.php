@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\TidalApi;
+use App\Services\TidalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -77,7 +77,7 @@ class TidalOauthController extends Controller
         $expiresIn = Arr::get($json, 'expires_in');
 
         // todo get the country code off this and store it with the credentials
-        $userResponse = Http::withToken($accessToken)->get(TidalApi::BASE_URL . '/users/me');
+        $userResponse = Http::withToken($accessToken)->get(TidalService::BASE_URL . '/users/me');
 
         if ($userResponse->failed()) {
             Log::error('Tidal User API Error', $response->json());

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Helpers\Track;
 use App\Models\OauthCredential;
 
-abstract class StreamingServiceApi
+abstract class StreamingService
 {
     public const PROVIDER = 'generic';
 
@@ -25,17 +25,31 @@ abstract class StreamingServiceApi
     /** @returns Track[] */
     abstract public function getPlaylistTracks(string $playlistId): array;
 
-    abstract public function createPlaylist(string $name, array $tracks): string;
+    abstract public function createPlaylist(string $name): string | false;
+
+    abstract public function addTrackToPlaylist(string $playlistId, Track $track): bool;
+
+    public function addTracksToPlaylist(string $playlistId, array $tracks): void
+    {
+        foreach ($tracks as $track) {
+            $this->addTrackToPlaylist($playlistId, $track);
+        }
+    }
+
+    /** @returns Track[] */
+    abstract public function searchTrack(Track $track): array;
+
+    abstract public function fillMissingInfo(Track $track): Track;
 
     public static function getServiceForProvider(
         string          $provider,
         OauthCredential $credential
-    ): ?StreamingServiceApi
+    ): ?StreamingService
     {
         return match ($provider) {
-            'spotify' => app(SpotifyApi::class, ['oauthCredential' => $credential]),
-            'youtube' => app(YouTubeApi::class, ['oauthCredential' => $credential]),
-            'tidal' => app(TidalApi::class, ['oauthCredential' => $credential]),
+            'spotify' => app(SpotifyService::class, ['oauthCredential' => $credential]),
+            'youtube' => app(YouTubeService::class, ['oauthCredential' => $credential]),
+            'tidal' => app(TidalService::class, ['oauthCredential' => $credential]),
             default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
         };
     }

@@ -4,7 +4,7 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\OauthCredential;
 use App\Models\User;
-use App\Services\TidalApi;
+use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -22,8 +22,8 @@ class GetPlaylistsControllerTest extends TestCase
             'user_id'     => $user->getKey(),
         ]);
 
-        $mockService = Mockery::mock(TidalApi::class);
-        $this->app->bind(TidalApi::class, fn() => $mockService);
+        $mockService = Mockery::mock(TidalService::class);
+        $this->app->bind(TidalService::class, fn() => $mockService);
 
         $getPlaylistsResponse = [
             [

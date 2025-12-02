@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\PlaylistTransferJob;
+use App\Models\PlaylistTransfer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class TriggerPlaylistTransferController extends Controller
             'source'      => $source,
             'destination' => $destination,
             'playlists'   => $playlists,
-            'status'      => 'pending',
+            'status'      => PlaylistTransfer::STATUS_PENDING,
         ]);
 
         PlaylistTransferJob::dispatch($playlistTransfer);

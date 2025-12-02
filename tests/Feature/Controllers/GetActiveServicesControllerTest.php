@@ -4,7 +4,7 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\OauthCredential;
 use App\Models\User;
-use App\Services\TidalApi;
+use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;

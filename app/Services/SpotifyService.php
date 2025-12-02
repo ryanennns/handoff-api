@@ -3,20 +3,17 @@
 namespace App\Services;
 
 use App\Helpers\Track;
-use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
-use Illuminate\Broadcasting\Broadcasters\LogBroadcaster;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
-class SpotifyApi extends StreamingServiceApi
+class SpotifyService extends StreamingService
 {
     public const PROVIDER = 'spotify';
-    private const BASE_URL = 'https://api.spotify.com/v1';
+    public const BASE_URL = 'https://api.spotify.com/v1';
 
     public function maybeRefreshToken(): void
     {
@@ -42,7 +39,11 @@ class SpotifyApi extends StreamingServiceApi
 
     private function makeRequest(string $endpoint, array $params = []): PromiseInterface|Response
     {
-        $this->maybeRefreshToken();
+        // todo i will regret this :)
+        if (Config::get('app.env') === 'production') {
+            $this->maybeRefreshToken();
+        }
+
 
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . $endpoint, $params);
@@ -92,7 +93,7 @@ class SpotifyApi extends StreamingServiceApi
             ]))->toArray();
     }
 
-    public function createPlaylist(string $name, array $tracks): string
+    public function createPlaylist(string $name): string | false
     {
         $playlistCreationResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/me/playlists', [
@@ -101,42 +102,60 @@ class SpotifyApi extends StreamingServiceApi
                 'public'      => false,
             ]);
 
-        $playlistCreationJson = $playlistCreationResponse->json();
-        $playlistId = Arr::get($playlistCreationJson, 'id');
-        $playlistUrl = Arr::get($playlistCreationJson, 'external_urls.spotify');
+        if ($playlistCreationResponse->failed()) {
+            return false;
+        }
 
-        $tracksToAddToPlaylist = [];
-        $errorTracks = [];
+        return Arr::get($playlistCreationResponse->json(), 'id');
+    }
 
-        // collecting the best match for the given songs
-        collect($tracks)->each(function ($track) use ($playlistId, &$tracksToAddToPlaylist, &$errorTracks) {
-            $searchResponse = Http::withToken($this->oauthCredential->token)
-                ->get(self::BASE_URL . '/search', [
-                    'type'  => 'track',
-                    'q'     => $track->artists[0] . ' ' . $track->name,
-                    'limit' => 1,
-                ]);
+    public function searchTrack(Track $track): array
+    {
+        $searchResponse = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . '/search', [
+                'type'  => 'track',
+                'q'     => $track->artists[0] . ' ' . $track->name,
+                'limit' => 1,
+            ]);
 
-            $searchResponseJson = $searchResponse->json();
-            $trackUri = Arr::get($searchResponseJson, 'tracks.items.0.uri');
+        return collect(Arr::get($searchResponse->json(), 'tracks.items', []))
+            ->map(fn($item) => new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($item, 'uri'),
+                'name'      => Arr::get($item, 'name'),
+                'artists'   => collect(Arr::get($item, 'artists'))
+                    ->map(fn($artist) => $artist['name'])->toArray(),
+                'explicit'  => Arr::get($item, 'explicit'),
+                'album'     => [
+                    'id'     => Arr::get($item, 'album.id'),
+                    'name'   => Arr::get($item, 'album.name'),
+                    'images' => Arr::get($item, 'album.images'),
+                ]
+            ]))->toArray();
+    }
 
-            if ($trackUri === null) {
-                $errorTracks[] = $track;
-                return;
-            }
+    public function addTrackToPlaylist(string $playlistId, Track $track): bool
+    {
+        $response = Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
+                'position' => 0,
+                'uris'     => $track->remote_id,
+            ]);
 
-            $tracksToAddToPlaylist[] = $trackUri;
-        });
+        return $response->successful();
+    }
 
-        // taking the found song IDs and returning
-        collect($tracksToAddToPlaylist)->chunk(100)->each(function ($tracksChunk) use ($playlistId) {
-            Http::withToken($this->oauthCredential->token)
-                ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
-                    'position' => 0,
-                    'uris'     => $tracksChunk,
-                ]);
-        });
+    public function addTracksToPlaylist(string $playlistId, array $tracks): void
+    {
+        collect($tracks)->chunk(100, fn($tracksChunk) => Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
+                'position' => 0,
+                'uris'     => collect($tracksChunk)->map(fn($track) => $track->remote_id)->toArray(),
+            ]));
+    }
 
-        return $playlistUrl;
+    public function fillMissingInfo(Track $track): Track
+    {
+        return $track;
     }
 }
