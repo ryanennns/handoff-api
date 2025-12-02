@@ -55,7 +55,6 @@ class PlaylistTransferJob implements ShouldQueue
                     $destinationApi->addTracksToPlaylist($playlistId, $tracksToAdd);
                 });
         } catch (\Throwable $exception) {
-            dd($exception->getMessage(), $exception->getTrace());
             Log::error($exception->getMessage(), $exception->getTrace());
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
             return;

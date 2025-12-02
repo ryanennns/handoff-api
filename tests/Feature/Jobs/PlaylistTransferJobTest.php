@@ -46,11 +46,4 @@ class PlaylistTransferJobTest extends TestCase
             'user_id'       => $this->user()->getKey(),
         ]);
     }
-
-    public function test_it_snickers()
-    {
-        Http::fake([
-
-        ]);
-    }
 }
