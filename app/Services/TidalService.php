@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use mysql_xdevapi\Exception;
 
 class TidalService extends StreamingService
 {
@@ -190,13 +191,17 @@ class TidalService extends StreamingService
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . $primaryArtistLink);
 
+        $r1json = $response->json();
+        Log::info('response 1', $r1json);
 
         sleep(1);
-        $artistId = Arr::get($response->json(), 'data.0.id');
+        $artistId = Arr::get($r1json, 'data.0.id');
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . "/artists/$artistId");
 
-        $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
+        $r2json = $response->json();
+        Log::info('response 2', $r2json);
+        $track->artists = [Arr::get($r2json, 'data.attributes.name')];
 
         return $track;
     }

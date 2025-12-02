@@ -37,7 +37,9 @@ class PlaylistTransferJob implements ShouldQueue
                             $candidates = $destinationApi->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
-                                ->map(fn($c) => empty($c->artists) ? $sourceApi->fillMissingInfo($c) : $c);
+                                ->map(fn($c) => is_null($c->artists) ? $destinationApi->fillMissingInfo($c) : $c);
+
+                            $candidates = $candidates->reject(fn($c) => empty($c->artists));
 
                             $finalCandidate = collect($candidates)->first(
                                 fn($candidate) => collect($track->artists)->contains(
