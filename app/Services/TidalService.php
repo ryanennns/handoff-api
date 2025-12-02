@@ -138,6 +138,8 @@ class TidalService extends StreamingService
 
     public function addTrackToPlaylist(string $playlistId, Track $track): bool
     {
+        sleep(1);
+
         $payload = [[
             'id'   => $track->remote_id,
             'type' => 'tracks',
@@ -150,6 +152,7 @@ class TidalService extends StreamingService
 
         if ($addToPlaylistResponse->failed()) {
             Log::error('Tidal Track API Error', [
+                'status'   => $addToPlaylistResponse->status(),
                 'response' => $addToPlaylistResponse->json(),
                 'payload'  => [
                     'data' => $payload
@@ -171,16 +174,14 @@ class TidalService extends StreamingService
             );
 
         $results = Arr::get($response->json(), 'included');
-        return collect($results)->map(function ($candidate) use ($track) {
-            return new Track([
-                'source'    => self::PROVIDER,
-                'remote_id' => Arr::get($candidate, 'id'),
-                'name'      => Arr::get($candidate, 'attributes.title'),
-                'meta'      => [
-                    'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
-                ],
-            ]);
-        })->reject(fn($a) => $a === null)->toArray();
+        return collect($results)->map(fn($candidate) => new Track([
+            'source'    => self::PROVIDER,
+            'remote_id' => Arr::get($candidate, 'id'),
+            'name'      => Arr::get($candidate, 'attributes.title'),
+            'meta'      => [
+                'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
+            ],
+        ]))->reject(fn($a) => $a === null)->toArray();
     }
 
     public function fillMissingInfo(Track $track): Track
@@ -191,17 +192,12 @@ class TidalService extends StreamingService
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . $primaryArtistLink);
 
-        $r1json = $response->json();
-        Log::info('response 1', $r1json);
-
         sleep(1);
-        $artistId = Arr::get($r1json, 'data.0.id');
+        $artistId = Arr::get($response->json(), 'data.0.id');
         $response = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . "/artists/$artistId");
 
-        $r2json = $response->json();
-        Log::info('response 2', $r2json);
-        $track->artists = [Arr::get($r2json, 'data.attributes.name')];
+        $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
 
         return $track;
     }
