@@ -102,8 +102,7 @@ class SpotifyService extends StreamingService
             ]);
 
         $playlistCreationJson = $playlistCreationResponse->json();
-        $playlistId = Arr::get($playlistCreationJson, 'id');
-        $playlistUrl = Arr::get($playlistCreationJson, 'external_urls.spotify');
+        return Arr::get($playlistCreationJson, 'id');
 
         $tracksToAddToPlaylist = [];
         $errorTracks = [];
@@ -142,11 +141,49 @@ class SpotifyService extends StreamingService
 
     public function searchTrack(Track $track): array
     {
-        // TODO: Implement searchTrack() method.
+        $searchResponse = Http::withToken($this->oauthCredential->token)
+            ->get(self::BASE_URL . '/search', [
+                'type'  => 'track',
+                'q'     => $track->artists[0] . ' ' . $track->name,
+                'limit' => 1,
+            ]);
+
+        return collect(Arr::get($searchResponse->json(), 'tracks.items', []))
+            ->map(fn($item) => new Track([
+                'source'    => self::PROVIDER,
+                'remote_id' => Arr::get($item, 'track.uri'),
+                'name'      => Arr::get($item, 'track.name'),
+                'artists'   => collect(Arr::get($item, 'track.artists'))
+                    ->map(fn($artist) => $artist['name'])->toArray(),
+                'explicit'  => Arr::get($item, 'track.explicit'),
+                'album'     => [
+                    'id'     => Arr::get($item, 'track.album.id'),
+                    'name'   => Arr::get($item, 'track.album.name'),
+                    'images' => Arr::get($item, 'track.album.images'),
+                ]
+            ]))->toArray();
     }
 
     public function addTrackToPlaylist(string $playlistId, Track $track): void
     {
-        // TODO: Implement addTrackToPlaylist() method.
+        Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
+                'position' => 0,
+                'uris'     => $track->remote_id,
+            ]);
+    }
+
+    public function addTracksToPlaylist(string $playlistId, array $tracks): void
+    {
+        collect($tracks)->chunk(100, fn($tracksChunk) => Http::withToken($this->oauthCredential->token)
+            ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
+                'position' => 0,
+                'uris'     => collect($tracksChunk)->map(fn($track) => $track->remote_id)->toArray(),
+            ]));
+    }
+
+    public function fillMissingInfo(Track $track): Track
+    {
+        return $track;
     }
 }

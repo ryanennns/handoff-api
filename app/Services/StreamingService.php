@@ -29,13 +29,17 @@ abstract class StreamingService
 
     abstract public function addTrackToPlaylist(string $playlistId, Track $track): void;
 
+    public function addTracksToPlaylist(string $playlistId, array $tracks): void
+    {
+        foreach ($tracks as $track) {
+            $this->addTrackToPlaylist($playlistId, $track);
+        }
+    }
+
     /** @returns Track[] */
     abstract public function searchTrack(Track $track): array;
 
-    public function fillMissingInfo(Track $track): Track
-    {
-        return $track;
-    }
+    abstract public function fillMissingInfo(Track $track): Track;
 
     public static function getServiceForProvider(
         string          $provider,
@@ -43,9 +47,9 @@ abstract class StreamingService
     ): ?StreamingService
     {
         return match ($provider) {
-            'spotify' => app(SpotifyApi::class, ['oauthCredential' => $credential]),
-            'youtube' => app(YouTubeApi::class, ['oauthCredential' => $credential]),
-            'tidal' => app(TidalApi::class, ['oauthCredential' => $credential]),
+            'spotify' => app(SpotifyService::class, ['oauthCredential' => $credential]),
+            'youtube' => app(YouTubeService::class, ['oauthCredential' => $credential]),
+            'tidal' => app(TidalService::class, ['oauthCredential' => $credential]),
             default => throw new \InvalidArgumentException("Unsupported provider: {$provider}"),
         };
     }

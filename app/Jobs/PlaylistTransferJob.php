@@ -30,9 +30,10 @@ class PlaylistTransferJob implements ShouldQueue
                     $tracks = $sourceApi->getPlaylistTracks($playlist['id']);
                     $playlistId = $destinationApi->createPlaylist($playlist['name'], $tracks);
                     $failedTracks = [];
+                    $tracksToAdd = [];
 
                     collect($tracks)->each(
-                        function ($track) use ($destinationApi, $sourceApi, $playlistId, &$failedTracks) {
+                        function ($track) use ($destinationApi, $sourceApi, &$failedTracks, &$tracksToAdd) {
                             $candidates = $destinationApi->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(
@@ -41,7 +42,6 @@ class PlaylistTransferJob implements ShouldQueue
                                     fn($c) => empty($c->artists) ? $sourceApi->fillMissingInfo($c) : $c
                                 );
 
-
                             $finalCandidate = collect($candidates)->first(
                                 fn($candidate) => collect($track->artists)->contains(
                                     fn($a) => levenshtein($a, $candidate->artists[0]) < 2
@@ -49,19 +49,16 @@ class PlaylistTransferJob implements ShouldQueue
                                 )
                             );
 
-                            if ($finalCandidate) {
-                                $destinationApi->addTrackToPlaylist($playlistId, $track);
-                            }
-
-                            if (!$finalCandidate) {
-                                $failedTracks[] = $track;
-                            }
+                            $finalCandidate
+                                ? $tracksToAdd[] = $finalCandidate
+                                : $failedTracks[] = $track;
                         }
                     );
 
-                    // todo -- do something with failed tracks
+                    $destinationApi->addTracksToPlaylist($playlistId, $tracksToAdd);
                 });
         } catch (\Throwable $exception) {
+            dd($exception->getMessage(), $exception->getTrace());
             Log::error($exception->getMessage(), $exception->getTrace());
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
             return;

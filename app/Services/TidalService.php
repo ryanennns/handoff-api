@@ -134,17 +134,36 @@ class TidalService extends StreamingService
 
         $json = $response->json();
         $results = Arr::get($json, 'included');
-        return collect($results)->map(function ($result) use ($track) {
+        return collect($results)->map(function ($candidate) use ($track) {
             return new Track([
                 'source'    => self::PROVIDER,
-                'remote_id' => Arr::get($result, 'id'),
-                'name'      => Arr::get($result, 'attributes.title'),
+                'remote_id' => Arr::get($candidate, 'id'),
+                'name'      => Arr::get($candidate, 'attributes.title'),
+                'meta'      => [
+                    'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
+                ],
             ]);
         })->reject(fn($a) => $a === null)->toArray();
     }
 
     public function fillMissingInfo(Track $track): Track
     {
+        $primaryArtistLink = $track->meta['primaryArtistLink'];
+
+        sleep(1);
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(
+                self::BASE_URL . $primaryArtistLink
+            );
+
+        sleep(1);
+        $response = Http::withToken($this->oauthCredential->token)
+            ->get(
+                self::BASE_URL . '/artists/' . Arr::get($response->json(), 'data.0.id'),
+            );
+
+        $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
+
         return $track;
     }
 
