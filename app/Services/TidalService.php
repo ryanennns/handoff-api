@@ -134,8 +134,7 @@ class TidalService extends StreamingService
 
         $json = $response->json();
         $results = Arr::get($json, 'included');
-        dump('collecting');
-        return collect($results)->map(function ($result) use(&$i, $track) {
+        return collect($results)->map(function ($result) use ($track) {
             return new Track([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($result, 'id'),
