@@ -25,9 +25,9 @@ abstract class StreamingService
     /** @returns Track[] */
     abstract public function getPlaylistTracks(string $playlistId): array;
 
-    abstract public function createPlaylist(string $name, array $tracks): string;
+    abstract public function createPlaylist(string $name): string | false;
 
-    abstract public function addTrackToPlaylist(string $playlistId, Track $track): void;
+    abstract public function addTrackToPlaylist(string $playlistId, Track $track): bool;
 
     public function addTracksToPlaylist(string $playlistId, array $tracks): void
     {
