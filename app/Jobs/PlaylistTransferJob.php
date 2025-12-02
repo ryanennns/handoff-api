@@ -31,31 +31,33 @@ class PlaylistTransferJob implements ShouldQueue
                     $playlistId = $destinationApi->createPlaylist($playlist['name'], $tracks);
                     $failedTracks = [];
 
-                    collect($tracks)->each(function ($track) use ($destinationApi, $sourceApi, $playlistId, &$failedTracks) {
-                        $candidates = $destinationApi->searchTrack($track);
-                        $candidates = collect($candidates)
-                            ->reject(
-                                fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName()
-                            )->map(
-                                fn($c) => empty($c->artists) ? $sourceApi->fillMissingInfo($c) : $c
+                    collect($tracks)->each(
+                        function ($track) use ($destinationApi, $sourceApi, $playlistId, &$failedTracks) {
+                            $candidates = $destinationApi->searchTrack($track);
+                            $candidates = collect($candidates)
+                                ->reject(
+                                    fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName()
+                                )->map(
+                                    fn($c) => empty($c->artists) ? $sourceApi->fillMissingInfo($c) : $c
+                                );
+
+
+                            $finalCandidate = collect($candidates)->first(
+                                fn($candidate) => collect($track->artists)->contains(
+                                    fn($a) => levenshtein($a, $candidate->artists[0]) < 2
+                                        || levenshtein(strtolower($a), $candidate->artists[0]) < 2
+                                )
                             );
 
+                            if ($finalCandidate) {
+                                $destinationApi->addTrackToPlaylist($playlistId, $track);
+                            }
 
-                        $finalCandidate = collect($candidates)->first(
-                            fn($candidate) => collect($track->artists)->contains(
-                                fn($a) => levenshtein($a, $candidate->artists[0]) < 2
-                                    || levenshtein(strtolower($a), $candidate->artists[0]) < 2
-                            )
-                        );
-
-                        if ($finalCandidate) {
-                            $destinationApi->addTrackToPlaylist($playlistId, $track);
+                            if (!$finalCandidate) {
+                                $failedTracks[] = $track;
+                            }
                         }
-
-                        if (!$finalCandidate) {
-                            $failedTracks[] = $track;
-                        }
-                    });
+                    );
 
                     // todo -- do something with failed tracks
                 });
