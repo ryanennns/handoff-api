@@ -29,6 +29,18 @@ class PlaylistTransferJob implements ShouldQueue
                 ->each(function ($playlist) use ($source, $destination) {
                     $tracks = $source->getPlaylistTracks($playlist['id']);
                     $playlistId = $destination->createPlaylist($playlist['name']);
+
+                    if (!$playlistId) {
+                        Log::error("Failed to create playlist $playlistId", [
+                            'source'      => $source::PROVIDER,
+                            'destination' => $destination::PROVIDER,
+                            'playlist_id' => $playlistId,
+                            'tracks'      => json_encode($tracks)
+                        ]);
+
+                        return;
+                    }
+
                     $tracksToAdd = [];
                     $failedTracks = [];
 

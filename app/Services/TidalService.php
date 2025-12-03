@@ -120,6 +120,7 @@ class TidalService extends StreamingService
 
         if ($createPlaylistResponse->failed()) {
             Log::error('Tidal Playlist API Error', [
+                'status'   => $createPlaylistResponse->status(),
                 'response' => $createPlaylistResponse->json(),
                 'payload'  => [
                     'data' => [
@@ -132,15 +133,11 @@ class TidalService extends StreamingService
                     ],
                 ],
             ]);
-        }
 
-        $createPlaylistJson = $createPlaylistResponse->json();
-
-        if ($createPlaylistResponse->failed()) {
             return false;
         }
 
-        return Arr::get($createPlaylistJson, 'data.id');
+        return Arr::get($createPlaylistResponse->json(), 'data.id');
     }
 
     public function addTrackToPlaylist(string $playlistId, Track $track): bool
