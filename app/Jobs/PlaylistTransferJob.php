@@ -55,6 +55,8 @@ class PlaylistTransferJob implements ShouldQueue
                     );
 
                     $destinationApi->addTracksToPlaylist($playlistId, $tracksToAdd);
+
+                    Log::info("Playlist created and populated: $playlistId");
                 });
         } catch (\Throwable $exception) {
             Log::error($exception->getMessage(), $exception->getTrace());

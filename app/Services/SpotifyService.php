@@ -93,7 +93,7 @@ class SpotifyService extends StreamingService
             ]))->toArray();
     }
 
-    public function createPlaylist(string $name): string | false
+    public function createPlaylist(string $name): string|false
     {
         $playlistCreationResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/me/playlists', [
@@ -147,11 +147,15 @@ class SpotifyService extends StreamingService
 
     public function addTracksToPlaylist(string $playlistId, array $tracks): void
     {
-        collect($tracks)->chunk(100, fn($tracksChunk) => Http::withToken($this->oauthCredential->token)
-            ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
-                'position' => 0,
-                'uris'     => collect($tracksChunk)->map(fn($track) => $track->remote_id)->toArray(),
-            ]));
+        collect($tracks)
+            ->chunk(100)
+            ->each(
+                fn($tracksChunk) => Http::withToken($this->oauthCredential->token)
+                    ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
+                        'position' => 0,
+                        'uris'     => collect($tracksChunk)->map(fn($track) => $track->remote_id)->toArray(),
+                    ])
+            );
     }
 
     public function fillMissingInfo(Track $track): Track
