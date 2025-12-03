@@ -22,22 +22,22 @@ class PlaylistTransferJob implements ShouldQueue
         $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
 
         try {
-            $sourceApi = $this->playlistTransfer->sourceApi();
-            $destinationApi = $this->playlistTransfer->destinationApi();
+            $source = $this->playlistTransfer->sourceApi();
+            $destination = $this->playlistTransfer->destinationApi();
 
             collect($this->playlistTransfer->playlists)
-                ->each(function ($playlist) use ($sourceApi, $destinationApi) {
-                    $tracks = $sourceApi->getPlaylistTracks($playlist['id']);
-                    $playlistId = $destinationApi->createPlaylist($playlist['name'], $tracks);
+                ->each(function ($playlist) use ($source, $destination) {
+                    $tracks = $source->getPlaylistTracks($playlist['id']);
+                    $playlistId = $destination->createPlaylist($playlist['name']);
                     $tracksToAdd = [];
                     $failedTracks = [];
 
                     collect($tracks)->each(
-                        function ($track) use ($destinationApi, $sourceApi, &$failedTracks, &$tracksToAdd) {
-                            $candidates = $destinationApi->searchTrack($track);
+                        function ($track) use ($destination, $source, &$failedTracks, &$tracksToAdd) {
+                            $candidates = $destination->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
-                                ->map(fn($c) => is_null($c->artists) ? $destinationApi->fillMissingInfo($c) : $c);
+                                ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c);
 
                             $candidates = $candidates->reject(fn($c) => empty($c->artists));
 
@@ -54,7 +54,7 @@ class PlaylistTransferJob implements ShouldQueue
                         }
                     );
 
-                    $destinationApi->addTracksToPlaylist($playlistId, $tracksToAdd);
+                    $destination->addTracksToPlaylist($playlistId, $tracksToAdd);
 
                     Log::info("Playlist created and populated: $playlistId");
                 });

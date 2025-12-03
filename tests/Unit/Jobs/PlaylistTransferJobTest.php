@@ -112,7 +112,7 @@ class PlaylistTransferJobTest extends TestCase
                 ])
             ]);
 
-        $this->sourceMock->shouldReceive('fillMissingInfo')
+        $this->destinationMock->shouldReceive('fillMissingInfo')
             ->andReturn(new Track([
                 'source'    => 'tidal',
                 'remote_id' => $this->faker->uuid,
