@@ -17,25 +17,25 @@ return [
     'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/google',
+        'redirect'      => env('APP_URL') . '/api/auth/callback/google',
     ],
 
     'spotify' => [
         'client_id'     => env('SPOTIFY_CLIENT_ID'),
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
-        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/spotify',
+        'redirect'      => env('APP_URL') . '/api/auth/callback/spotify',
     ],
 
     'youtube' => [
         'client_id'     => env('YOUTUBE_CLIENT_ID'),
         'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
-        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/youtube',
+        'redirect'      => env('APP_URL') . '/api/auth/callback/youtube',
     ],
 
     'tidal' => [
         'client_id'     => env('TIDAL_CLIENT_ID'),
         'client_secret' => env('TIDAL_CLIENT_SECRET'),
-        'redirect'      => 'https://handoff-api.enns.dev/api/auth/callback/tidal',
+        'redirect'      => env('APP_URL') . '/api/auth/callback/tidal',
     ],
 
     'postmark' => [

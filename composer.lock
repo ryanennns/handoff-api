@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e500efa2769a1bed73df7b280cb9a955",
+    "content-hash": "bd7c4636137f63c88d430695bfdcf4aa",
     "packages": [
         {
             "name": "brick/math",
@@ -6725,6 +6725,64 @@
             "time": "2025-06-16T00:02:10+00:00"
         },
         {
+            "name": "freebuu/socialite-local",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/freebuu/socialite-local.git",
+                "reference": "0e4e73c8d584e2e305e4e665096c1c1a6253be4f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/freebuu/socialite-local/zipball/0e4e73c8d584e2e305e4e665096c1c1a6253be4f",
+                "reference": "0e4e73c8d584e2e305e4e665096c1c1a6253be4f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/cache": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10 || ^11 || ^12",
+                "illuminate/support": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10 || ^11 || ^12",
+                "laravel/socialite": "~4.0 || ~5.0",
+                "php": "^7.4 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "FreeBuu\\SocialiteLocal\\SocialiteLocalServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "FreeBuu\\SocialiteLocal\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Maksim",
+                    "email": "2618094@gmail.com",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Socialite provider for local development",
+            "keywords": [
+                "laravel",
+                "laravel socialite",
+                "local develop",
+                "oauth",
+                "socialite"
+            ],
+            "support": {
+                "issues": "https://github.com/freebuu/socialite-local/issues",
+                "source": "https://github.com/freebuu/socialite-local/tree/v1.1.0"
+            },
+            "time": "2025-10-13T14:10:56+00:00"
+        },
+        {
             "name": "hamcrest/hamcrest-php",
             "version": "v2.1.1",
             "source": {
@@ -8902,12 +8960,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
