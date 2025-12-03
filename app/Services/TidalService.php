@@ -40,13 +40,11 @@ class TidalService extends StreamingService
 
         $data = $response->json();
         $accessToken = Arr::get($data, 'access_token');
-        $refreshToken = Arr::get($data, 'refresh_token');
         $expiresIn = Arr::get($data, 'expires_in');
 
         $this->oauthCredential->update([
-            'token'         => $accessToken,
-            'refresh_token' => $refreshToken,
-            'expires_at'    => now()->addSeconds($expiresIn),
+            'token'      => $accessToken,
+            'expires_at' => now()->addSeconds($expiresIn),
         ]);
     }
 
