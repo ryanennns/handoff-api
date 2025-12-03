@@ -9,7 +9,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use mysql_xdevapi\Exception;
 
 class TidalService extends StreamingService
 {
@@ -21,8 +20,6 @@ class TidalService extends StreamingService
         parent::__construct($oauthCredential);
 
         $this->maybeRefreshToken();
-
-        Log::info('oauth cred', ['token' => $oauthCredential->token]);
     }
 
     public function maybeRefreshToken(): void
