@@ -81,15 +81,25 @@ class TidalService extends StreamingService
         $tracksJson = $tracksResponse->json();
         return collect(Arr::get($tracksJson, 'data', []))
             ->map(function ($item) {
-                sleep(0.25);
+                sleep(2);
                 $trackResponse = Http::withToken($this->oauthCredential->token)
                     ->get(self::BASE_URL . "/tracks/{$item['id']}");
                 $trackJson = $trackResponse->json();
+
+                $artistResponse = Http::withToken($this->oauthCredential->token)
+                    ->get(self::BASE_URL . "/tracks/{$item['id']}/relationships/artists");
+
+                $artistId = Arr::get($artistResponse->json(), 'data.0.id');
+                $artistResponse = Http::withToken($this->oauthCredential->token)
+                    ->get(self::BASE_URL . "/artists/$artistId");
+
+                $primaryArtistName = Arr::get($artistResponse->json(), 'data.attributes.name');
 
                 return new Track([
                     'source'    => self::PROVIDER,
                     'remote_id' => Arr::get($trackJson, 'data.id'),
                     'name'      => Arr::get($trackJson, 'data.attributes.title'),
+                    'artists'   => [$primaryArtistName]
                 ]);
             })->toArray();
     }

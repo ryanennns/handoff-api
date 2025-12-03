@@ -212,6 +212,108 @@ class TidalServiceTest extends TestCase
                 "self" => "/tracks/37704290"
             ]
         ];
+        $trackArtistsOne = [
+            "data"  => [
+                ["id" => "7804", "type" => "artists"],
+                ["id" => "1552", "type" => "artists"]],
+            "links" => ["self" => "/tracks/37704290/relationships/artists"
+            ]
+        ];
+        $artistOne = [
+            "data"  => [
+                "id"            => "7804",
+                "type"          => "artists",
+                "attributes"    => [
+                    "name"          => "JAY Z",
+                    "popularity"    => 0.9614253085579615,
+                    "externalLinks" => [
+                        [
+                            "href" => "https://www.facebook.com/JayZ",
+                            "meta" => [
+                                "type" => "FACEBOOK"
+                            ]
+                        ],
+                        [
+                            "href" => "https://twitter.com/SC",
+                            "meta" => [
+                                "type" => "TWITTER"
+                            ]
+                        ],
+                        [
+                            "href" => "https://tidal.com/browse/artist/7804",
+                            "meta" => [
+                                "type" => "TIDAL_SHARING"
+                            ]
+                        ]
+                    ]
+                ],
+                "relationships" => [
+                    "albums"         => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/albums"
+                        ]
+                    ],
+                    "biography"      => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/biography"
+                        ]
+                    ],
+                    "followers"      => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/followers"
+                        ]
+                    ],
+                    "following"      => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/following"
+                        ]
+                    ],
+                    "owners"         => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/owners"
+                        ]
+                    ],
+                    "profileArt"     => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/profileArt"
+                        ]
+                    ],
+                    "radio"          => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/radio"
+                        ]
+                    ],
+                    "roles"          => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/roles"
+                        ]
+                    ],
+                    "similarArtists" => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/similarArtists"
+                        ]
+                    ],
+                    "trackProviders" => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/trackProviders"
+                        ]
+                    ],
+                    "tracks"         => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/tracks"
+                        ]
+                    ],
+                    "videos"         => [
+                        "links" => [
+                            "self" => "/artists/7804/relationships/videos"
+                        ]
+                    ]
+                ]
+            ],
+            "links" => [
+                "self" => "/artists/7804"
+            ]
+        ];
         $songTwo = [
             "data"  => [
                 "id"            => "151799532",
@@ -306,6 +408,114 @@ class TidalServiceTest extends TestCase
                 "self" => "/tracks/151799532"
             ]
         ];
+        $trackArtistsTwo = [
+            "data"  => [
+                [
+                    "id"   => "3652822",
+                    "type" => "artists"
+                ],
+                [
+                    "id"   => "17548",
+                    "type" => "artists"
+                ],
+                [
+                    "id"   => "4006106",
+                    "type" => "artists"
+                ]
+            ],
+            "links" => [
+                "self" => "/tracks/151799532/relationships/artists"
+            ]
+        ];
+        $artistTwo = [
+            "data"  => [
+                "id"            => "3652822",
+                "type"          => "artists",
+                "attributes"    => [
+                    "name"          => "J. Cole",
+                    "popularity"    => 0.9410301546416101,
+                    "externalLinks" => [
+                        [
+                            "href" => "https://twitter.com/JColeNC",
+                            "meta" => [
+                                "type" => "TWITTER"
+                            ]
+                        ],
+                        [
+                            "href" => "https://tidal.com/browse/artist/3652822",
+                            "meta" => [
+                                "type" => "TIDAL_SHARING"
+                            ]
+                        ]
+                    ]
+                ],
+                "relationships" => [
+                    "albums"         => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/albums"
+                        ]
+                    ],
+                    "biography"      => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/biography"
+                        ]
+                    ],
+                    "followers"      => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/followers"
+                        ]
+                    ],
+                    "following"      => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/following"
+                        ]
+                    ],
+                    "owners"         => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/owners"
+                        ]
+                    ],
+                    "profileArt"     => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/profileArt"
+                        ]
+                    ],
+                    "radio"          => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/radio"
+                        ]
+                    ],
+                    "roles"          => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/roles"
+                        ]
+                    ],
+                    "similarArtists" => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/similarArtists"
+                        ]
+                    ],
+                    "trackProviders" => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/trackProviders"
+                        ]
+                    ],
+                    "tracks"         => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/tracks"
+                        ]
+                    ],
+                    "videos"         => [
+                        "links" => [
+                            "self" => "/artists/3652822/relationships/videos"
+                        ]
+                    ]
+                ]
+            ],
+            "links" => [
+                "self" => "/artists/3652822"
+            ]
+        ];
         $playlistTracksResponse = [
             "data"  => [
                 [
@@ -331,10 +541,16 @@ class TidalServiceTest extends TestCase
         ];
 
         Http::fake([
-            TidalService::BASE_URL . '/playlists*' => Http::response($playlistTracksResponse),
-            TidalService::BASE_URL . '/tracks*'    => Http::sequence([
-                Http::response($trackOne),
-                Http::response($songTwo),
+            TidalService::BASE_URL . '/playlists*/relationships/items' => Http::response($playlistTracksResponse),
+            TidalService::BASE_URL . '/tracks/37704290'                => Http::response($trackOne),
+            TidalService::BASE_URL . '/tracks/151799532'               => Http::response($songTwo),
+            TidalService::BASE_URL . '/tracks/*/relationships/artists' => Http::sequence([
+                Http::response($trackArtistsOne),
+                Http::response($trackArtistsTwo),
+            ]),
+            TidalService::BASE_URL . '/artists/*'                      => Http::sequence([
+                Http::response($artistOne),
+                Http::response($artistTwo),
             ]),
         ]);
 
@@ -344,6 +560,8 @@ class TidalServiceTest extends TestCase
 
         $this->assertEquals("Empire State Of Mind", $playlistTracks[0]->name);
         $this->assertEquals("New York Times", $playlistTracks[1]->name);
+        $this->assertEquals(["JAY Z"], $playlistTracks[0]->artists);
+        $this->assertEquals(["J. Cole"], $playlistTracks[1]->artists);
     }
 
     public function test_it_returns_playlist_id_on_successful_creation()
