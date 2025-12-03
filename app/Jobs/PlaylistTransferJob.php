@@ -68,6 +68,9 @@ class PlaylistTransferJob implements ShouldQueue
 
                     $destination->addTracksToPlaylist($playlistId, $tracksToAdd);
 
+                    $this->playlistTransfer->playlists_processed += 1;
+                    $this->playlistTransfer->save();
+
                     Log::info("Playlist created and populated w/ ID $playlistId", [
                         'failed_tracks' => $failedTracks,
                     ]);
