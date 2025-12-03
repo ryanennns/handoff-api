@@ -6,6 +6,7 @@ use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PlaylistTransferJob implements ShouldQueue
 {
@@ -49,9 +50,8 @@ class PlaylistTransferJob implements ShouldQueue
                             $candidates = $destination->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
-                                ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c);
-
-                            $candidates = $candidates->reject(fn($c) => empty($c->artists));
+                                ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
+                                ->reject(fn($c) => empty($c->artists));
 
                             $finalCandidate = collect($candidates)->first(
                                 fn($candidate) => collect($track->artists)->contains(
@@ -68,9 +68,11 @@ class PlaylistTransferJob implements ShouldQueue
 
                     $destination->addTracksToPlaylist($playlistId, $tracksToAdd);
 
-                    Log::info("Playlist created and populated: $playlistId");
+                    Log::info("Playlist created and populated w/ ID $playlistId", [
+                        'failed_tracks' => $failedTracks,
+                    ]);
                 });
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Log::error($exception->getMessage(), $exception->getTrace());
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
             return;
