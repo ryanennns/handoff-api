@@ -19,14 +19,17 @@ class GetPlaylistTransfersControllerTest extends TestCase
         $response = $this->actingAs($user)->get(route('playlist-transfers.index'));
         $response->assertOk();
         $response->assertJsonFragment([
-            'data' => $playlistTransfers->map(fn(PlaylistTransfer $playlistTransfer) => [
-                'id'          => $playlistTransfer->getKey(),
-                'source'      => $playlistTransfer->source,
-                'destination' => $playlistTransfer->destination,
-                'playlists'   => $playlistTransfer->playlists,
-                'status'      => $playlistTransfer->status,
-                'created_at'  => $playlistTransfer->created_at->toIso8601String(),
-            ])->toArray()
+            'data' => $playlistTransfers
+                ->map(fn($pt) => $pt->fresh())
+                ->map(fn(PlaylistTransfer $playlistTransfer) => [
+                    'id'                  => $playlistTransfer->getKey(),
+                    'source'              => $playlistTransfer->source,
+                    'destination'         => $playlistTransfer->destination,
+                    'playlists'           => $playlistTransfer->playlists,
+                    'playlists_processed' => $playlistTransfer->playlists_processed,
+                    'status'              => $playlistTransfer->status,
+                    'created_at'          => $playlistTransfer->created_at->toIso8601String(),
+                ])->toArray()
         ]);
     }
 }

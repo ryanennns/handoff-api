@@ -91,6 +91,23 @@ class PlaylistTransferJobTest extends TestCase
         $this->assertEquals(PlaylistTransfer::STATUS_COMPLETED, $job->status);
     }
 
+    public function test_it_updates_processed_playlists()
+    {
+        $this->happyPathApiMocks();
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'    => [
+                ['id' => 'asdf', 'name' => 'snickers']
+            ]
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+        $job->refresh();
+        $this->assertEquals(1, $job->playlists_processed);
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
@@ -102,7 +119,8 @@ class PlaylistTransferJobTest extends TestCase
                     'artists'   => ['2hollis', 'brakence']
                 ])
             ]);
-        $this->destinationMock->shouldReceive('createPlaylist');
+        $this->destinationMock->shouldReceive('createPlaylist')
+            ->andReturn('fake-playlist-id');
         $this->destinationMock->shouldReceive('searchTrack')
             ->andReturn([
                 new Track([
