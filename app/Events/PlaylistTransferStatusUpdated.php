@@ -29,7 +29,8 @@ class PlaylistTransferStatusUpdated implements ShouldBroadcastNow
     {
         return [
             'playlist_transfer_id' => $this->playlistTransfer->getKey(),
-            'status'               => $this->playlistTransfer->status
+            'status'               => $this->playlistTransfer->status,
+            'playlists_processed'  => $this->playlistTransfer->playlists_processed,
         ];
     }
 }
