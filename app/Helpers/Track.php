@@ -12,6 +12,7 @@ class Track
     public ?array $artists;
     public ?bool $explicit;
     public ?array $album;
+    public ?string $version;
     public ?array $meta;
 
     public function __construct(array $contents)
@@ -22,6 +23,7 @@ class Track
         $this->artists = Arr::get($contents, 'artists');
         $this->explicit = Arr::get($contents, 'explicit') ?? false;
         $this->album = Arr::get($contents, 'album');
+        $this->version = Arr::get($contents, 'version');
         $this->meta = Arr::get($contents, 'meta');
     }
 

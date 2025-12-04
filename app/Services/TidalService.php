@@ -180,6 +180,7 @@ class TidalService extends StreamingService
             'source'    => self::PROVIDER,
             'remote_id' => Arr::get($candidate, 'id'),
             'name'      => Arr::get($candidate, 'attributes.title'),
+            'version'   => Arr::get($candidate, 'attributes.version'),
             'meta'      => [
                 'primaryArtistLink' => Arr::get($candidate, 'relationships.artists.links.self'),
             ],

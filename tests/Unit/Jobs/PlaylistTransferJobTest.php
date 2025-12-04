@@ -99,7 +99,7 @@ class PlaylistTransferJobTest extends TestCase
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'    => [
+            'playlists'   => [
                 ['id' => 'asdf', 'name' => 'snickers']
             ]
         ]);
