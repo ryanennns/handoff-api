@@ -17,7 +17,18 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->afterResolving('socialite_local.subject_repository', function ($r) {
+            $r->setUserCallback(function ($data) {
+                return [
+                    'id'       => $data['id'] ?? random_int(1000, 10000),
+                    'sub'      => $data['id'],
+                    'uuid'     => $data['uuid'] ?? vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4)),
+                    'email'    => $email = $data['email'],
+                    'username' => $data['username'] ?? $email,
+                    'name'     => $data['name'] ?? mb_substr($email, 0, strpos($email, '@')) . '_name',
+                ];
+            });
+        });
     }
 
     public function boot(): void
