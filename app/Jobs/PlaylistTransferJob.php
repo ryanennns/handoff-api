@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\FailedTrack;
 use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -70,6 +71,19 @@ class PlaylistTransferJob implements ShouldQueue
 
                     $this->playlistTransfer->playlists_processed += 1;
                     $this->playlistTransfer->save();
+
+                    $this->playlistTransfer->failedTracks()
+                        ->saveMany(
+                            collect($failedTracks)->map(
+                                fn($track) => FailedTrack::query()->firstOrCreate([
+                                    'name'        => $track->name,
+                                    'artists'     => $track->artists,
+                                    'remote_id'   => $track->remote_id,
+                                    'source'      => $source::PROVIDER,
+                                    'destination' => $destination::PROVIDER,
+                                ])
+                            )
+                        );
 
                     Log::info("Playlist created and populated w/ ID $playlistId", [
                         'failed_tracks' => $failedTracks,

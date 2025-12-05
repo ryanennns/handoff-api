@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Http\Resources\FailedTrackResource;
 use App\Models\PlaylistTransfer;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -31,6 +32,9 @@ class PlaylistTransferStatusUpdated implements ShouldBroadcastNow
             'playlist_transfer_id' => $this->playlistTransfer->getKey(),
             'status'               => $this->playlistTransfer->status,
             'playlists_processed'  => $this->playlistTransfer->playlists_processed,
+            'failed_tracks'        => FailedTrackResource::collection(
+                $this->playlistTransfer->failedTracks
+            ),
         ];
     }
 }

@@ -108,6 +108,45 @@ class PlaylistTransferJobTest extends TestCase
         $this->assertEquals(1, $job->playlists_processed);
     }
 
+    public function test_it_creates_failed_track_instance_if_it_can_not_find_track()
+    {
+        $this->sourceMock->shouldReceive('getPlaylistTracks')
+            ->andReturn([
+                new Track([
+                    'source'    => 'tidal',
+                    'remote_id' => $this->faker->uuid,
+                    'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence']
+                ])
+            ]);
+        $this->destinationMock->shouldReceive('createPlaylist')
+            ->andReturn('fake-playlist-id');
+        $this->destinationMock->shouldReceive('searchTrack')
+            ->andReturn([
+                new Track([
+                    'source'    => 'tidal',
+                    'remote_id' => $this->faker->uuid,
+                    'name'      => 'not the same track',
+                ])
+            ]);
+
+        $this->destinationMock->shouldReceive('addTracksToPlaylist');
+
+        /** @var PlaylistTransfer $job */
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 'asdf', 'name' => 'snickers']
+            ]
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+        $job->refresh();
+        $this->assertEquals(1, $job->playlists_processed);
+        $this->assertCount(1, $job->failedTracks);
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
