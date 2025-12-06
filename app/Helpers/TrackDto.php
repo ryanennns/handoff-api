@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use Illuminate\Support\Arr;
 
-class Track
+class TrackDto
 {
     public ?string $source;
     public ?string $remote_id;

@@ -12,4 +12,9 @@ class Track extends Model
     use HasUuids;
 
     protected $guarded = [];
+
+    protected $casts = [
+        'artists'    => 'array',
+        'remote_ids' => 'array',
+    ];
 }

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Services;
 
-use App\Helpers\Track;
+use App\Helpers\TrackDto;
 use App\Models\OauthCredential;
 use App\Services\SpotifyService;
 use App\Services\TidalService;
@@ -556,7 +556,7 @@ class TidalServiceTest extends TestCase
 
         $playlistTracks = (new TidalService($this->oac))->getPlaylistTracks('some-bunk-id');
 
-        collect($playlistTracks)->each(fn($t) => $this->assertInstanceOf(Track::class, $t));
+        collect($playlistTracks)->each(fn($t) => $this->assertInstanceOf(TrackDto::class, $t));
 
         $this->assertEquals("USJZ10900031", $playlistTracks[0]->isrc);
         $this->assertEquals("USQX91301194", $playlistTracks[1]->isrc);
@@ -874,14 +874,14 @@ class TidalServiceTest extends TestCase
         ])]);
 
         $candidates = (new TidalService($this->oac))->searchTrack(
-            new Track([
+            new TrackDto([
                 'name'    => 'Yikes',
                 'artists' => ['Kanye West'],
             ])
         );
 
         $this->assertCount(1, $candidates);
-        $this->assertInstanceOf(Track::class, $candidates[0]);
+        $this->assertInstanceOf(TrackDto::class, $candidates[0]);
 
         $candidate = $candidates[0];
 
@@ -901,7 +901,7 @@ class TidalServiceTest extends TestCase
 
         $this->assertTrue((new TidalService($this->oac))->addTrackToPlaylist(
             'some-id',
-            new Track([
+            new TrackDto([
                 'name'    => 'Yikes',
                 'artists' => ['Kanye West'],
             ])
@@ -914,7 +914,7 @@ class TidalServiceTest extends TestCase
 
         $this->assertFalse((new TidalService($this->oac))->addTrackToPlaylist(
             'some-id',
-            new Track([
+            new TrackDto([
                 'name'    => 'Yikes',
                 'artists' => ['Kanye West'],
             ])
@@ -1037,7 +1037,7 @@ class TidalServiceTest extends TestCase
         ]);
 
         $track = (new TidalService($this->oac))->fillMissingInfo(
-            new Track([
+            new TrackDto([
                 'remote_id' => '98156345',
                 'name'      => 'Yikes',
                 'artists'   => ['Kanye West'],
