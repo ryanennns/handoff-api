@@ -49,8 +49,9 @@ class PlaylistTransferJob implements ShouldQueue
 
                     collect($tracks)->each(
                         function (TrackDto $track) use ($destination, $source, &$failedTracks, &$tracksToAdd) {
-                            Track::query()->create([
-                                'isrc'       => $track->isrc,
+                            Track::query()->firstOrCreate([
+                                'isrc' => $track->isrc,
+                            ], [
                                 'name'       => $track->name,
                                 'artists'    => $track->artists,
                                 'album'      => $track->album['name'],
