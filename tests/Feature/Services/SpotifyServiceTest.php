@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Services;
 
-use App\Helpers\TrackDto;
+use App\Helpers\Track;
 use App\Models\OauthCredential;
 use App\Services\SpotifyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -316,7 +316,7 @@ class SpotifyServiceTest extends TestCase
             '*'                                   => Http::response([])
         ]);
 
-        $actual = (new SpotifyService($this->oac))->searchTrack(new TrackDto(['artists' => ['brakence']]));
+        $actual = (new SpotifyService($this->oac))->searchTrack(new Track(['artists' => ['brakence']]));
 
         $this->assertCount(1, $actual);
 
@@ -344,7 +344,7 @@ class SpotifyServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response()]);
 
-        $actual = (new SpotifyService($this->oac))->addTrackToPlaylist('123', new TrackDto(['artists' => ['brakence']]));
+        $actual = (new SpotifyService($this->oac))->addTrackToPlaylist('123', new Track(['artists' => ['brakence']]));
 
         $this->assertTrue($actual);
     }
@@ -353,7 +353,7 @@ class SpotifyServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response([], 422)]);
 
-        $actual = (new SpotifyService($this->oac))->addTrackToPlaylist('123', new TrackDto(['artists' => ['brakence']]));
+        $actual = (new SpotifyService($this->oac))->addTrackToPlaylist('123', new Track(['artists' => ['brakence']]));
 
         $this->assertFalse($actual);
     }

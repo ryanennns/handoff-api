@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Helpers\TrackDto;
+use App\Helpers\Track;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
@@ -78,7 +78,7 @@ class SpotifyService extends StreamingService
         $response = $this->makeRequest("/playlists/$playlistId/tracks");
 
         return collect(Arr::get($response->json(), 'items'))
-            ->map(fn($item) => new TrackDto([
+            ->map(fn($item) => new Track([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'track.uri'),
                 'isrc'      => Arr::get($item, 'track.external_ids.isrc'),
@@ -110,7 +110,7 @@ class SpotifyService extends StreamingService
         return Arr::get($playlistCreationResponse->json(), 'id');
     }
 
-    public function searchTrack(TrackDto $track): array
+    public function searchTrack(Track $track): array
     {
         $searchResponse = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/search', [
@@ -120,7 +120,7 @@ class SpotifyService extends StreamingService
             ]);
 
         return collect(Arr::get($searchResponse->json(), 'tracks.items', []))
-            ->map(fn($item) => new TrackDto([
+            ->map(fn($item) => new Track([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'uri'),
                 'isrc'      => Arr::get($item, 'external_ids.isrc'),
@@ -136,7 +136,7 @@ class SpotifyService extends StreamingService
             ]))->toArray();
     }
 
-    public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
+    public function addTrackToPlaylist(string $playlistId, Track $track): bool
     {
         $response = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
@@ -160,7 +160,7 @@ class SpotifyService extends StreamingService
             );
     }
 
-    public function fillMissingInfo(TrackDto $track): TrackDto
+    public function fillMissingInfo(Track $track): Track
     {
         return $track;
     }
