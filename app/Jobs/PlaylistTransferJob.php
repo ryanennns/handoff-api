@@ -49,16 +49,6 @@ class PlaylistTransferJob implements ShouldQueue
 
                     collect($tracks)->each(
                         function (TrackDto $track) use ($destination, $source, &$failedTracks, &$tracksToAdd) {
-                            Track::query()->firstOrCreate([
-                                'isrc' => $track->isrc,
-                            ], [
-                                'name'       => $track->name,
-                                'artists'    => $track->artists,
-                                'album'      => $track->album['name'],
-                                'explicit'   => $track->explicit,
-                                'remote_ids' => [$source::PROVIDER => $track->remote_id],
-                            ]);
-
                             $candidates = $destination->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
@@ -75,6 +65,20 @@ class PlaylistTransferJob implements ShouldQueue
                             $finalCandidate
                                 ? $tracksToAdd[] = $finalCandidate
                                 : $failedTracks[] = $track;
+
+                            $remoteIds = [$source::PROVIDER => $track->remote_id];
+                            if ($finalCandidate) {
+                                $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
+                            }
+                            Track::query()->firstOrCreate([
+                                'isrc' => $track->isrc,
+                            ], [
+                                'name'       => $track->name,
+                                'artists'    => $track->artists,
+                                'album'      => $track->album['name'],
+                                'explicit'   => $track->explicit,
+                                'remote_ids' => $remoteIds,
+                            ]);
                         }
                     );
 
