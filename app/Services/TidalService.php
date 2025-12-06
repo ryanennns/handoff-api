@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\ApiClients\TidalApi;
-use App\Helpers\Track;
+use App\Helpers\TrackDto;
 use App\Models\OauthCredential;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -92,7 +92,7 @@ class TidalService extends StreamingService
 
                 $primaryArtistName = Arr::get($artistResponse->json(), 'data.attributes.name');
 
-                return new Track([
+                return new TrackDto([
                     'source'    => self::PROVIDER,
                     'remote_id' => Arr::get($trackJson, 'data.id'),
                     'isrc'      => Arr::get($trackJson, 'data.attributes.isrc'),
@@ -138,7 +138,7 @@ class TidalService extends StreamingService
         return Arr::get($createPlaylistResponse->json(), 'data.id');
     }
 
-    public function addTrackToPlaylist(string $playlistId, Track $track): bool
+    public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
     {
 
         $payload = [[
@@ -165,7 +165,7 @@ class TidalService extends StreamingService
         return true;
     }
 
-    public function searchTrack(Track $track): array
+    public function searchTrack(TrackDto $track): array
     {
         $response = TidalApi::withToken($this->oauthCredential->token)
             ->get(
@@ -174,7 +174,7 @@ class TidalService extends StreamingService
             );
 
         $results = Arr::get($response->json(), 'included');
-        return collect($results)->map(fn($candidate) => new Track([
+        return collect($results)->map(fn($candidate) => new TrackDto([
             'source'    => self::PROVIDER,
             'remote_id' => Arr::get($candidate, 'id'),
             'isrc'      => Arr::get($candidate, 'attributes.isrc'),
@@ -186,7 +186,7 @@ class TidalService extends StreamingService
         ]))->reject(fn($a) => $a === null)->toArray();
     }
 
-    public function fillMissingInfo(Track $track): Track
+    public function fillMissingInfo(TrackDto $track): TrackDto
     {
         $primaryArtistLink = $track->meta['primaryArtistLink'];
 
