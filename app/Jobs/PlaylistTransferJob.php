@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\PlaylistTransfer;
+use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +48,10 @@ class PlaylistTransferJob implements ShouldQueue
 
                     collect($tracks)->each(
                         function ($track) use ($destination, $source, &$failedTracks, &$tracksToAdd) {
+                            Track::query()->create([
+
+                            ]);
+
                             $candidates = $destination->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
