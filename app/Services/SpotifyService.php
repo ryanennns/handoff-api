@@ -81,6 +81,7 @@ class SpotifyService extends StreamingService
             ->map(fn($item) => new Track([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'track.uri'),
+                'isrc'      => Arr::get($item, 'track.external_ids.isrc'),
                 'name'      => Arr::get($item, 'track.name'),
                 'artists'   => collect(Arr::get($item, 'track.artists'))
                     ->map(fn($artist) => $artist['name'])->toArray(),
@@ -122,6 +123,7 @@ class SpotifyService extends StreamingService
             ->map(fn($item) => new Track([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'uri'),
+                'isrc'      => Arr::get($item, 'external_ids.isrc'),
                 'name'      => Arr::get($item, 'name'),
                 'artists'   => collect(Arr::get($item, 'artists'))
                     ->map(fn($artist) => $artist['name'])->toArray(),

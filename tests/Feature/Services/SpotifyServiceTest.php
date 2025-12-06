@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Tests\SpotifyResponse;
 use Tests\TestCase;
 
 class SpotifyServiceTest extends TestCase
@@ -104,128 +105,52 @@ class SpotifyServiceTest extends TestCase
 
     public function test_it_maps_playlist_songs_to_song_dto()
     {
-        $items = [
-            [
-                "source"    => "spotify",
-                "remote_id" => "spotify:track:0Gz4Q1Bmyef5yA0G6LIIQZ",
-                "name"      => "poster boy",
-                "artists"   => [
-                    "2hollis"
-                ],
-                "explicit"  => true,
-                "album"     => [
-                    "id"     => "2cwwBz019F7hQwggBShXCv",
-                    "name"   => "2",
-                    "images" => [
-                        [
-                            "height" => 640,
-                            "url"    => "https://i.scdn.co/image/ab67616d0000b273057d046c6dfb348e0215567c",
-                            "width"  => 640
-                        ],
-                        [
-                            "height" => 300,
-                            "url"    => "https://i.scdn.co/image/ab67616d00001e02057d046c6dfb348e0215567c",
-                            "width"  => 300
-                        ],
-                        [
-                            "height" => 64,
-                            "url"    => "https://i.scdn.co/image/ab67616d00004851057d046c6dfb348e0215567c",
-                            "width"  => 64
-                        ]
-                    ]
-                ],
-                "meta"      => null
-            ],
-            [
-                "source"    => "spotify",
-                "remote_id" => "spotify:track:6C2nVSSeXNqfoY8t6tliZ4",
-                "name"      => "jeans",
-                "artists"   => [
-                    "2hollis"
-                ],
-                "explicit"  => true,
-                "album"     => [
-                    "id"     => "7ANu2uI0FVnoQnQsrSiVcO",
-                    "name"   => "jeans",
-                    "images" => [
-                        [
-                            "height" => 640,
-                            "url"    => "https://i.scdn.co/image/ab67616d0000b273b8362432f72c45d2b6bf08d8",
-                            "width"  => 640
-                        ],
-                        [
-                            "height" => 300,
-                            "url"    => "https://i.scdn.co/image/ab67616d00001e02b8362432f72c45d2b6bf08d8",
-                            "width"  => 300
-                        ],
-                        [
-                            "height" => 64,
-                            "url"    => "https://i.scdn.co/image/ab67616d00004851b8362432f72c45d2b6bf08d8",
-                            "width"  => 64
-                        ]
-                    ]
-                ],
-                "meta"      => null
-            ],
-            [
-                "source"    => "spotify",
-                "remote_id" => "spotify:track:0jNhSK5gotdRB1G4nMqEau",
-                "name"      => "trauma",
-                "artists"   => [
-                    "2hollis"
-                ],
-                "explicit"  => true,
-                "album"     => [
-                    "id"     => "0eihBhagAmahQQALFmScz3",
-                    "name"   => "trauma",
-                    "images" => [
-                        [
-                            "height" => 640,
-                            "url"    => "https://i.scdn.co/image/ab67616d0000b273051b22048cf7a4bd3523e6e4",
-                            "width"  => 640
-                        ],
-                        [
-                            "height" => 300,
-                            "url"    => "https://i.scdn.co/image/ab67616d00001e02051b22048cf7a4bd3523e6e4",
-                            "width"  => 300
-                        ],
-                        [
-                            "height" => 64,
-                            "url"    => "https://i.scdn.co/image/ab67616d00004851051b22048cf7a4bd3523e6e4",
-                            "width"  => 64
-                        ]
-                    ]
-                ],
-                "meta"      => null
-            ]
-        ];
-        $payload = [
-            'items' => [
-                ...$items
-            ]
-        ];
-
         Http::fake([
-            SpotifyService::BASE_URL . '/playlists*' => Http::response($payload),
+            SpotifyService::BASE_URL . '/playlists*' => Http::response(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_PAYLOAD),
         ]);
 
         $playlistTracks = (new SpotifyService($this->oac))->getPlaylistTracks('$playlistId');
 
-        collect($playlistTracks)->each(function ($track, $index) use ($items) {
+        collect($playlistTracks)->each(function ($track, $index) {
+            $this->assertNotNull($track->remote_id);
+            $this->assertNotNull($track->isrc);
+            $this->assertNotNull($track->name);
+            $this->assertNotNull($track->name);
+            $this->assertNotNull($track->artists);
+            $this->assertNotNull($track->explicit);
+            $this->assertNotNull($track->album);
+
             $this->assertEquals(SpotifyService::PROVIDER, $track->source);
-            $this->assertEquals(Arr::get($items, "$index.track.uri"), $track->remote_id);
-            $this->assertEquals(Arr::get($items, "$index.track.name"), $track->name);
             $this->assertEquals(
-                collect(Arr::get($items, "$index.track.artists"))
+                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.uri"),
+                $track->remote_id
+            );
+            $this->assertEquals(
+                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.external_ids.isrc"),
+                $track->isrc
+            );
+            $this->assertEquals(
+                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.name"),
+                $track->name
+            );
+            $this->assertEquals(
+                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.name"),
+                $track->name
+            );
+            $this->assertEquals(
+                collect(Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.artists"))
                     ->map(fn($a) => $a['name'])
                     ->toArray(),
                 $track->artists
             );
-            $this->assertEquals(Arr::get($items, "$index.track.explicit"), $track->explicit);
+            $this->assertEquals(
+                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.explicit"),
+                $track->explicit
+            );
             $this->assertEquals([
-                'id'     => Arr::get($items, "$index.track.album.id"),
-                'name'   => Arr::get($items, "$index.track.album.name"),
-                'images' => Arr::get($items, "$index.track.album.images"),
+                'id'     => Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.album.id"),
+                'name'   => Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.album.name"),
+                'images' => Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.album.images"),
             ], $track->album);
         });
     }
@@ -399,6 +324,7 @@ class SpotifyServiceTest extends TestCase
 
         $this->assertEquals(SpotifyService::PROVIDER, $track->source);
         $this->assertEquals(Arr::get($items, "0.uri"), $track->remote_id);
+        $this->assertEquals(Arr::get($items, "0.external_ids.isrc"), $track->isrc);
         $this->assertEquals(Arr::get($items, "0.name"), $track->name);
         $this->assertEquals(
             collect(Arr::get($items, "0.artists"))
