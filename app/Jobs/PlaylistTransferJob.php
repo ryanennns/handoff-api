@@ -70,15 +70,8 @@ class PlaylistTransferJob implements ShouldQueue
                             if ($finalCandidate) {
                                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
                             }
-                            Track::query()->firstOrCreate([
-                                'isrc' => $track->isrc,
-                            ], [
-                                'name'       => $track->name,
-                                'artists'    => $track->artists,
-                                'album'      => $track->album['name'],
-                                'explicit'   => $track->explicit,
-                                'remote_ids' => $remoteIds,
-                            ]);
+
+                            $this->updateOrCreateTrack($track, $remoteIds);
                         }
                     );
 
@@ -98,5 +91,36 @@ class PlaylistTransferJob implements ShouldQueue
         }
 
         $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_COMPLETED]);
+    }
+
+    public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
+    {
+        if (!$track->isrc) {
+            return null;
+        }
+
+        $trackModel = Track::query()
+            ->where(['isrc' => $track->isrc])
+            ->first();
+
+        if ($trackModel) {
+            $trackModel->update([
+                'remote_ids' => array_merge(
+                    $trackModel->remote_ids,
+                    $remoteIds,
+                )
+            ]);
+
+            return $trackModel;
+        }
+
+        return Track::query()->create([
+            'isrc'       => $track->isrc,
+            'name'       => $track->name,
+            'artists'    => $track->artists,
+            'album'      => $track->album['name'],
+            'explicit'   => $track->explicit,
+            'remote_ids' => $remoteIds,
+        ]);
     }
 }
