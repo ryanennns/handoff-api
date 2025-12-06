@@ -104,6 +104,6 @@ class TidalOauthController extends Controller
             'expires_at'    => now()->addSeconds($expiresIn),
         ]);
 
-        return redirect(Config::get('app.client_url') . '/dashboard');
+        return redirect(Config::get('app.client_url') . '/dashboard?tab=services');
     }
 }

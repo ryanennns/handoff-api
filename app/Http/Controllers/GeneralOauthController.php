@@ -79,6 +79,6 @@ class GeneralOauthController extends Controller
             'refresh_token' => $oauthUser->refreshToken,
         ]);
 
-        return redirect(Config::get('app.client_url') . '/dashboard');
+        return redirect(Config::get('app.client_url') . '/dashboard?tab=services');
     }
 }
