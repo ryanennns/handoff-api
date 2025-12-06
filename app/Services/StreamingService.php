@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Helpers\Track;
+use App\Helpers\TrackDto;
 use App\Models\OauthCredential;
 
 abstract class StreamingService
@@ -22,12 +22,12 @@ abstract class StreamingService
 
     abstract public function getPlaylists(): array;
 
-    /** @returns Track[] */
+    /** @returns TrackDto[] */
     abstract public function getPlaylistTracks(string $playlistId): array;
 
     abstract public function createPlaylist(string $name): string | false;
 
-    abstract public function addTrackToPlaylist(string $playlistId, Track $track): bool;
+    abstract public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool;
 
     public function addTracksToPlaylist(string $playlistId, array $tracks): void
     {
@@ -36,10 +36,10 @@ abstract class StreamingService
         }
     }
 
-    /** @returns Track[] */
-    abstract public function searchTrack(Track $track): array;
+    /** @returns TrackDto[] */
+    abstract public function searchTrack(TrackDto $track): array;
 
-    abstract public function fillMissingInfo(Track $track): Track;
+    abstract public function fillMissingInfo(TrackDto $track): TrackDto;
 
     public static function getServiceForProvider(
         string          $provider,

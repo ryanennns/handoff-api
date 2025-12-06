@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Helpers\Track;
+use App\Helpers\TrackDto;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\PendingRequest;
@@ -95,7 +95,7 @@ class YouTubeService extends StreamingService
         ]);
 
         return collect(Arr::get($response->json(), 'items'))
-            ->map(fn($item) => new Track([
+            ->map(fn($item) => new TrackDto([
                 'source'    => self::PROVIDER,
                 'remote_id' => Arr::get($item, 'contentDetails.videoId'),
                 'name'      => Arr::get($item, 'snippet.title'),
@@ -127,7 +127,7 @@ class YouTubeService extends StreamingService
         $youtubeTrackIds = [];
         $failedTracks = [];
 
-        collect($tracks)->unique(fn($track) => $track->toSearchString())->each(function (Track $track) use ($client, &$youtubeTrackIds, &$failedTracks) {
+        collect($tracks)->unique(fn($track) => $track->toSearchString())->each(function (TrackDto $track) use ($client, &$youtubeTrackIds, &$failedTracks) {
             try {
                 $searchResponse = $client->get('/search', [
                     'q'               => $track->toSearchString(),
@@ -181,19 +181,19 @@ class YouTubeService extends StreamingService
         return $youtubePlaylistId;
     }
 
-    public function addTrackToPlaylist(string $playlistId, Track $track): bool
+    public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
     {
         return false;
         // TODO: Implement addTrackToPlaylist() method.
     }
 
-    public function searchTrack(Track $track): array
+    public function searchTrack(TrackDto $track): array
     {
         // TODO: Implement searchTrack() method.
         return [];
     }
 
-    public function fillMissingInfo(Track $track): Track
+    public function fillMissingInfo(TrackDto $track): TrackDto
     {
         return $track;
     }

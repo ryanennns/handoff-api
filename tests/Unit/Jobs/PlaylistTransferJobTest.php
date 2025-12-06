@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Jobs;
 
-use App\Helpers\Track;
+use App\Helpers\TrackDto;
 use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
 use App\Models\PlaylistTransfer;
@@ -108,22 +108,46 @@ class PlaylistTransferJobTest extends TestCase
         $this->assertEquals(1, $job->playlists_processed);
     }
 
+    public function test_it_creates_track_models()
+    {
+        $this->happyPathApiMocks();
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 'asdf', 'name' => 'snickers']
+            ]
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+        $this->assertDatabaseHas('tracks', [
+            'isrc'     => 'USUM72005901',
+            'name'     => 'oh wow nice collab',
+            'artists'  => json_encode(['2hollis', 'brakence']),
+            'album'    => 'album name',
+            'explicit' => false,
+        ]);
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
             ->andReturn([
-                new Track([
+                new TrackDto([
                     'source'    => 'tidal',
                     'remote_id' => $this->faker->uuid,
+                    'isrc'      => 'USUM72005901',
                     'name'      => 'oh wow nice collab',
-                    'artists'   => ['2hollis', 'brakence']
+                    'artists'   => ['2hollis', 'brakence'],
+                    'album'     => ['name' => 'album name'],
                 ])
             ]);
         $this->destinationMock->shouldReceive('createPlaylist')
             ->andReturn('fake-playlist-id');
         $this->destinationMock->shouldReceive('searchTrack')
             ->andReturn([
-                new Track([
+                new TrackDto([
                     'source'    => 'tidal',
                     'remote_id' => $this->faker->uuid,
                     'name'      => 'oh wow nice collab',
@@ -131,7 +155,7 @@ class PlaylistTransferJobTest extends TestCase
             ]);
 
         $this->destinationMock->shouldReceive('fillMissingInfo')
-            ->andReturn(new Track([
+            ->andReturn(new TrackDto([
                 'source'    => 'tidal',
                 'remote_id' => $this->faker->uuid,
                 'name'      => 'oh wow nice collab',
