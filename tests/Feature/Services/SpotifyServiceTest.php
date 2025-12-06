@@ -112,6 +112,14 @@ class SpotifyServiceTest extends TestCase
         $playlistTracks = (new SpotifyService($this->oac))->getPlaylistTracks('$playlistId');
 
         collect($playlistTracks)->each(function ($track, $index) {
+            $this->assertNotNull($track->remote_id);
+            $this->assertNotNull($track->isrc);
+            $this->assertNotNull($track->name);
+            $this->assertNotNull($track->name);
+            $this->assertNotNull($track->artists);
+            $this->assertNotNull($track->explicit);
+            $this->assertNotNull($track->album);
+
             $this->assertEquals(SpotifyService::PROVIDER, $track->source);
             $this->assertEquals(
                 Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.uri"),
