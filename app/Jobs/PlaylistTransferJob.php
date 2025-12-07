@@ -31,11 +31,12 @@ class PlaylistTransferJob implements ShouldQueue
 
             collect($this->playlistTransfer->playlists)
                 ->each(function ($playlist) use ($source, $destination) {
-                    $playlistModel = Playlist::query()->create([
-                        'name'      => $playlist['name'],
-                        'user_id'   => $this->playlistTransfer->user_id,
+                    $playlistModel = Playlist::query()->firstOrCreate([
                         'service'   => $source::PROVIDER,
                         'remote_id' => $playlist['id'],
+                    ], [
+                        'user_id' => $this->playlistTransfer->user_id,
+                        'name'    => $playlist['name'],
                     ]);
 
                     $tracks = $source->getPlaylistTracks($playlist['id']);

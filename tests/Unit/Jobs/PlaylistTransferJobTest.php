@@ -288,6 +288,35 @@ class PlaylistTransferJobTest extends TestCase
         $this->assertNotEmpty($playlist->tracks()->get());
     }
 
+    public function test_it_creates_one_playlist_if_transferred_twice()
+    {
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 1, 'name' => 'snickers1'],
+            ],
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $this->assertDatabaseCount('playlists', 1);
+
+        $this->happyPathApiMocks();
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 1, 'name' => 'snickers1'],
+            ],
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $this->assertDatabaseCount('playlists', 1);
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
