@@ -5,6 +5,7 @@ namespace Tests\Unit\Jobs;
 use App\Helpers\TrackDto;
 use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use App\Services\SpotifyService;
@@ -226,7 +227,6 @@ class PlaylistTransferJobTest extends TestCase
     {
         $this->happyPathApiMocks();
 
-
         $job = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
@@ -243,6 +243,49 @@ class PlaylistTransferJobTest extends TestCase
             'remote_id' => "1",
             'user_id'   => $this->user()->getKey(),
         ]);
+    }
+
+    public function test_it_associates_tracks_with_playlist()
+    {
+        $trackOne = new TrackDto([
+            'source'    => 'spotify',
+            'remote_id' => Str::uuid(),
+            'isrc'      => 'USUM72005901',
+            'name'      => 'oh wow nice collab',
+            'artists'   => ['2hollis', 'brakence'],
+            'album'     => ['name' => 'album name'],
+        ]);
+        $trackTwo = new TrackDto([
+            'source'    => 'spotify',
+            'remote_id' => Str::uuid(),
+            'isrc'      => 'USUM72005902',
+            'name'      => 'another fire track',
+            'artists'   => ['artist1', 'artist2'],
+            'album'     => ['name' => 'another album'],
+        ]);
+
+        $this->sourceMock->shouldReceive('getPlaylistTracks')
+            ->andReturn([$trackOne, $trackTwo]);
+        $this->destinationMock->shouldReceive('createPlaylist')
+            ->andReturn('fake-playlist-id');
+        $this->destinationMock->shouldReceive('searchTrack')
+            ->andReturn([]);
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 1, 'name' => 'snickers1'],
+            ],
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $playlist = Playlist::query()
+            ->where(['name' => 'snickers1'])
+            ->firstOrFail();
+
+        $this->assertNotEmpty($playlist->tracks()->get());
     }
 
     public function happyPathApiMocks(): void
