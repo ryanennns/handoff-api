@@ -57,6 +57,8 @@ class SpotifyService extends StreamingService
 
     public function getPlaylists(): array
     {
+        $this->maybeRefreshToken();
+
         $response = $this->makeRequest('/me/playlists');
 
         return collect(Arr::get($response->json(), 'items'))
@@ -75,6 +77,8 @@ class SpotifyService extends StreamingService
 
     public function getPlaylistTracks(string $playlistId): array
     {
+        $this->maybeRefreshToken();
+
         $response = $this->makeRequest("/playlists/$playlistId/tracks");
 
         return collect(Arr::get($response->json(), 'items'))
@@ -96,6 +100,8 @@ class SpotifyService extends StreamingService
 
     public function createPlaylist(string $name): string|false
     {
+        $this->maybeRefreshToken();
+
         $playlistCreationResponse = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/me/playlists', [
                 'name'        => $name,
@@ -112,6 +118,8 @@ class SpotifyService extends StreamingService
 
     public function searchTrack(TrackDto $track): array
     {
+        $this->maybeRefreshToken();
+
         $searchResponse = Http::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/search', [
                 'type'  => 'track',
@@ -138,6 +146,8 @@ class SpotifyService extends StreamingService
 
     public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
     {
+        $this->maybeRefreshToken();
+
         $response = Http::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . "/playlists/$playlistId/tracks", [
                 'position' => 0,
@@ -149,6 +159,8 @@ class SpotifyService extends StreamingService
 
     public function addTracksToPlaylist(string $playlistId, array $tracks): void
     {
+        $this->maybeRefreshToken();
+
         collect($tracks)
             ->chunk(100)
             ->each(

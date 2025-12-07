@@ -50,6 +50,8 @@ class TidalService extends StreamingService
 
     public function getPlaylists(): array
     {
+        $this->maybeRefreshToken();
+
         $playlistResponse = TidalApi::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/playlists', [
                 'countryCode'         => 'CA', // todo whatado about this :/
@@ -73,6 +75,8 @@ class TidalService extends StreamingService
 
     public function getPlaylistTracks(string $playlistId): array
     {
+        $this->maybeRefreshToken();
+
         $tracksResponse = TidalApi::withToken($this->oauthCredential->token)
             ->get(self::BASE_URL . '/playlists/' . $playlistId . '/relationships/items', []);
 
@@ -104,6 +108,8 @@ class TidalService extends StreamingService
 
     public function createPlaylist(string $name): string|false
     {
+        $this->maybeRefreshToken();
+
         $createPlaylistResponse = TidalApi::withToken($this->oauthCredential->token)
             ->post(self::BASE_URL . '/playlists', [
                 'data' => [
@@ -140,6 +146,7 @@ class TidalService extends StreamingService
 
     public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
     {
+        $this->maybeRefreshToken();
 
         $payload = [[
             'id'   => $track->remote_id,
@@ -167,6 +174,8 @@ class TidalService extends StreamingService
 
     public function searchTrack(TrackDto $track): array
     {
+        $this->maybeRefreshToken();
+
         $response = TidalApi::withToken($this->oauthCredential->token)
             ->get(
                 self::BASE_URL . '/searchResults/' . $track->toSearchString(),
@@ -188,6 +197,8 @@ class TidalService extends StreamingService
 
     public function fillMissingInfo(TrackDto $track): TrackDto
     {
+        $this->maybeRefreshToken();
+
         $primaryArtistLink = $track->meta['primaryArtistLink'];
 
         $response = TidalApi::withToken($this->oauthCredential->token)
