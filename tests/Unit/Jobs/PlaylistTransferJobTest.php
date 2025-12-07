@@ -6,6 +6,7 @@ use App\Helpers\TrackDto;
 use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
 use App\Models\PlaylistTransfer;
+use App\Models\Track;
 use App\Services\SpotifyService;
 use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,6 +15,7 @@ use Illuminate\Support\Str;
 use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
+use function GuzzleHttp\json_encode;
 
 class PlaylistTransferJobTest extends TestCase
 {
@@ -127,6 +129,96 @@ class PlaylistTransferJobTest extends TestCase
             'artists'  => json_encode(['2hollis', 'brakence']),
             'album'    => 'album name',
             'explicit' => false,
+        ]);
+    }
+
+    public function test_it_creates_track_with_one_remote_id_if_no_final_candidate()
+    {
+        $uuid = Str::uuid();
+        $this->sourceMock->shouldReceive('getPlaylistTracks')
+            ->andReturn([
+                new TrackDto([
+                    'source'    => 'spotify',
+                    'remote_id' => $uuid,
+                    'isrc'      => 'USUM72005901',
+                    'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence'],
+                    'album'     => ['name' => 'album name'],
+                ])
+            ]);
+        $this->destinationMock->shouldReceive('createPlaylist')
+            ->andReturn('fake-playlist-id');
+        $this->destinationMock->shouldReceive('searchTrack')
+            ->andReturn([]);
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 'asdf', 'name' => 'snickers']
+            ]
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $this->assertDatabaseHas('tracks', [
+            'isrc'       => 'USUM72005901',
+            'remote_ids' => json_encode(['spotify' => $uuid]),
+        ]);
+    }
+
+    public function test_it_creates_track_with_two_remote_ids_if_final_canddidate_found()
+    {
+        $spotifyUuid = Str::uuid();
+        $tidalUuid = Str::uuid();
+        $this->sourceMock->shouldReceive('getPlaylistTracks')
+            ->andReturn([
+                new TrackDto([
+                    'source'    => 'spotify',
+                    'remote_id' => $spotifyUuid,
+                    'isrc'      => 'USUM72005901',
+                    'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence'],
+                    'album'     => ['name' => 'album name'],
+                ])
+            ]);
+        $this->destinationMock->shouldReceive('createPlaylist')
+            ->andReturn('fake-playlist-id');
+        $this->destinationMock->shouldReceive('searchTrack')
+            ->andReturn([
+                new TrackDto([
+                    'source'    => 'tidal',
+                    'remote_id' => $tidalUuid,
+                    'name'      => 'oh wow nice collab',
+                ])
+            ]);
+
+        $this->destinationMock->shouldReceive('fillMissingInfo')
+            ->andReturn(new TrackDto([
+                'source'    => 'tidal',
+                'remote_id' => $tidalUuid,
+                'name'      => 'oh wow nice collab',
+                'artists'   => ['2hollis', 'brakence']
+            ]));
+
+        $this->destinationMock->shouldReceive('addTracksToPlaylist');
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 'asdf', 'name' => 'snickers']
+            ]
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $this->assertDatabaseHas('tracks', [
+            'isrc'       => 'USUM72005901',
+            'remote_ids' => json_encode([
+                'spotify' => $spotifyUuid,
+                'tidal'   => $tidalUuid,
+            ]),
         ]);
     }
 
