@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Helpers\TrackDto;
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,6 +31,13 @@ class PlaylistTransferJob implements ShouldQueue
 
             collect($this->playlistTransfer->playlists)
                 ->each(function ($playlist) use ($source, $destination) {
+                    Playlist::query()->create([
+                        'name'      => $playlist['name'],
+                        'user_id'   => $this->playlistTransfer->user_id,
+                        'service'   => $source::PROVIDER,
+                        'remote_id' => $playlist['id'],
+                    ]);
+
                     $tracks = $source->getPlaylistTracks($playlist['id']);
                     $playlistId = $destination->createPlaylist($playlist['name']);
 

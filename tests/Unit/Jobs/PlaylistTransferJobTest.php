@@ -222,6 +222,29 @@ class PlaylistTransferJobTest extends TestCase
         ]);
     }
 
+    public function test_it_creates_playlist_models()
+    {
+        $this->happyPathApiMocks();
+
+
+        $job = PlaylistTransfer::factory()->create([
+            'source'      => SpotifyService::PROVIDER,
+            'destination' => TidalService::PROVIDER,
+            'user_id'     => $this->user()->getKey(),
+            'playlists'   => [
+                ['id' => 1, 'name' => 'snickers1'],
+            ],
+        ]);
+        (new PlaylistTransferJob($job))->handle();
+
+        $this->assertDatabaseHas('playlists', [
+            'name'      => 'snickers1',
+            'service'   => SpotifyService::PROVIDER,
+            'remote_id' => "1",
+            'user_id'   => $this->user()->getKey(),
+        ]);
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
