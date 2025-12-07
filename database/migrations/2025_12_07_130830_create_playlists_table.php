@@ -12,6 +12,8 @@ return new class extends Migration {
             $table->string('name');
             $table->foreignUuid('user_id')
                 ->constrained('users');
+            $table->string('service');
+            $table->string('remote_id');
             $table->timestamps();
         });
     }
