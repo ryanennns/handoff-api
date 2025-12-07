@@ -10,7 +10,7 @@ class PlaylistFactory extends Factory
     {
         return [
             'name'      => $this->faker->sentence(3),
-            'provider'  => 'spotify',
+            'service'  => 'spotify',
             'remote_id' => $this->faker->uuid(),
         ];
     }
