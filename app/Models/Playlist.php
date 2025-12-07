@@ -7,20 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Track extends Model
+class Playlist extends Model
 {
     use HasFactory;
     use HasUuids;
 
     protected $guarded = [];
 
-    protected $casts = [
-        'artists'    => 'array',
-        'remote_ids' => 'array',
-    ];
-
-    public function playlists(): BelongsToMany
+    public function tracks(): BelongsToMany
     {
-        return $this->belongsToMany(Playlist::class);
+        return $this->belongsToMany(Track::class);
     }
 }

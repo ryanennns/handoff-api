@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Helpers\TrackDto;
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,6 +31,14 @@ class PlaylistTransferJob implements ShouldQueue
 
             collect($this->playlistTransfer->playlists)
                 ->each(function ($playlist) use ($source, $destination) {
+                    $playlistModel = Playlist::query()->firstOrCreate([
+                        'service'   => $source::PROVIDER,
+                        'remote_id' => $playlist['id'],
+                    ], [
+                        'user_id' => $this->playlistTransfer->user_id,
+                        'name'    => $playlist['name'],
+                    ]);
+
                     $tracks = $source->getPlaylistTracks($playlist['id']);
                     $playlistId = $destination->createPlaylist($playlist['name']);
 
@@ -48,7 +57,7 @@ class PlaylistTransferJob implements ShouldQueue
                     $failedTracks = [];
 
                     collect($tracks)->each(
-                        function (TrackDto $track) use ($destination, $source, &$failedTracks, &$tracksToAdd) {
+                        function (TrackDto $track) use ($playlistModel, $destination, $source, &$failedTracks, &$tracksToAdd) {
                             $candidates = $destination->searchTrack($track);
                             $candidates = collect($candidates)
                                 ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
@@ -71,7 +80,10 @@ class PlaylistTransferJob implements ShouldQueue
                                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
                             }
 
-                            $this->updateOrCreateTrack($track, $remoteIds);
+                            $model = $this->updateOrCreateTrack($track, $remoteIds);
+                            if ($model) {
+                                $playlistModel->tracks()->save($model);
+                            }
                         }
                     );
 
