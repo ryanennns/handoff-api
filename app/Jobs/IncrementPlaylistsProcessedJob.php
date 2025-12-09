@@ -6,7 +6,7 @@ use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class IncrementPlaylistsProcessed implements ShouldQueue
+class IncrementPlaylistsProcessedJob implements ShouldQueue
 {
     use Queueable;
 

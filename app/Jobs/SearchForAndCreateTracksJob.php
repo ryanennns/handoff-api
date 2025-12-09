@@ -9,7 +9,7 @@ use App\Services\StreamingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class TrackJob implements ShouldQueue
+class SearchForAndCreateTracksJob implements ShouldQueue
 {
     use Queueable;
 
@@ -21,7 +21,6 @@ class TrackJob implements ShouldQueue
         private TrackDto                  $track,
     )
     {
-        //
     }
 
     public function handle(): void

@@ -27,9 +27,9 @@ class PlaylistTransferJob implements ShouldQueue
             Bus::chain(
                 [
                     ...collect($this->playlistTransfer->playlists)
-                        ->map(fn($pt) => new PlaylistJob($this->playlistTransfer, $pt))
+                        ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
                         ->toArray(),
-                    new FinishPlaylistTransfer($this->playlistTransfer),
+                    new FinishPlaylistTransferJob($this->playlistTransfer),
                 ]
             )->dispatch();
         } catch (Throwable $exception) {

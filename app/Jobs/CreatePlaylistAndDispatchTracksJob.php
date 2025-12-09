@@ -9,7 +9,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
-class PlaylistJob implements ShouldQueue
+class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
 {
     use Queueable;
 
@@ -51,7 +51,7 @@ class PlaylistJob implements ShouldQueue
         Bus::chain(
             [
                 ...collect($tracks)
-                    ->map(fn($t) => new TrackJob(
+                    ->map(fn($t) => new SearchForAndCreateTracksJob(
                         $source,
                         $destination,
                         $playlistId,
@@ -59,10 +59,8 @@ class PlaylistJob implements ShouldQueue
                         $t,
                     ))
                     ->toArray(),
-                new IncrementPlaylistsProcessed(
-                    $this->playlistTransfer
-                ),
+                new IncrementPlaylistsProcessedJob($this->playlistTransfer),
             ]
-        );
+        )->dispatch();
     }
 }
