@@ -2,12 +2,11 @@
 
 namespace App\Jobs;
 
-use App\Helpers\TrackDto;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
-use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
 class PlaylistJob implements ShouldQueue
@@ -49,79 +48,21 @@ class PlaylistJob implements ShouldQueue
             return;
         }
 
-        $tracksToAdd = [];
-        $failedTracks = [];
-
-        collect($tracks)->each(
-            function (TrackDto $track) use ($playlistModel, $destination, $source, &$failedTracks, &$tracksToAdd) {
-                $candidates = $destination->searchTrack($track);
-                $candidates = collect($candidates)
-                    ->reject(fn($c) => $c->name !== $track->name && $c->name !== $track->trimmedName())
-                    ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
-                    ->reject(fn($c) => empty($c->artists));
-
-                $finalCandidate = collect($candidates)->first(
-                    fn($candidate) => collect($track->artists)->contains(
-                        fn($a) => levenshtein($a, $candidate->artists[0]) < 2
-                            || levenshtein(strtolower($a), $candidate->artists[0]) < 2
-                    )
-                );
-
-                $finalCandidate
-                    ? $tracksToAdd[] = $finalCandidate
-                    : $failedTracks[] = $track;
-
-                $remoteIds = [$source::PROVIDER => $track->remote_id];
-                if ($finalCandidate) {
-                    $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
-                }
-
-                $model = $this->updateOrCreateTrack($track, $remoteIds);
-                if ($model) {
-                    $playlistModel->tracks()->save($model);
-                }
-            }
+        Bus::chain(
+            [
+                ...collect($tracks)
+                    ->map(fn($t) => new TrackJob(
+                        $source,
+                        $destination,
+                        $playlistId,
+                        $playlistModel,
+                        $t,
+                    ))
+                    ->toArray(),
+                new IncrementPlaylistsProcessed(
+                    $this->playlistTransfer
+                ),
+            ]
         );
-
-        $destination->addTracksToPlaylist($playlistId, $tracksToAdd);
-
-        $this->playlistTransfer->playlists_processed += 1;
-        $this->playlistTransfer->save();
-
-        Log::info("Playlist created and populated w/ ID $playlistId", [
-            'failed_tracks' => $failedTracks,
-        ]);
-
-    }
-
-    public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
-    {
-        if (!$track->isrc) {
-            return null;
-        }
-
-        $trackModel = Track::query()
-            ->where(['isrc' => $track->isrc])
-            ->first();
-
-        if ($trackModel) {
-            $trackModel->update([
-                'remote_ids' => array_merge(
-                    $trackModel->remote_ids,
-                    $remoteIds,
-                )
-            ]);
-
-            return $trackModel;
-        }
-
-        return Track::query()->create([
-            'isrc'       => $track->isrc,
-            'name'       => $track->name,
-            'artists'    => $track->artists,
-            'album'      => $track->album['name'],
-            'explicit'   => $track->explicit,
-            'remote_ids' => $remoteIds,
-        ]);
     }
 }
