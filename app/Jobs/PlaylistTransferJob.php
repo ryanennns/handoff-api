@@ -2,10 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Helpers\TrackDto;
-use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
-use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Bus;
@@ -28,16 +25,17 @@ class PlaylistTransferJob implements ShouldQueue
 
         try {
             Bus::chain(
-                collect($this->playlistTransfer->playlists)
-                    ->map(fn($pt) => new PlaylistJob($this->playlistTransfer, $pt))
-                    ->toArray()
+                [
+                    ...collect($this->playlistTransfer->playlists)
+                        ->map(fn($pt) => new PlaylistJob($this->playlistTransfer, $pt))
+                        ->toArray(),
+                    new FinishPlaylistTransfer($this->playlistTransfer),
+                ]
             )->dispatch();
         } catch (Throwable $exception) {
             Log::error($exception->getMessage(), $exception->getTrace());
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
             return;
         }
-
-        $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_COMPLETED]);
     }
 }
