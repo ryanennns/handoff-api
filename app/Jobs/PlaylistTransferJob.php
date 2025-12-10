@@ -21,6 +21,8 @@ class PlaylistTransferJob implements ShouldQueue
 
     public function handle(): void
     {
+        Log::info("PlaylistTransferJob started");
+
         $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
 
         Bus::chain(

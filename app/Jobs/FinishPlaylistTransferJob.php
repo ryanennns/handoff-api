@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class FinishPlaylistTransferJob implements ShouldQueue
 {
@@ -16,6 +17,8 @@ class FinishPlaylistTransferJob implements ShouldQueue
 
     public function handle(): void
     {
+        Log::info("FinishPlaylistTransferJob started");
+
         $this->playlistTransfer->update([
             'status' => PlaylistTransfer::STATUS_COMPLETED
         ]);

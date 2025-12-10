@@ -7,6 +7,7 @@ use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class PopulatePlaylistWithTracksJob implements ShouldQueue
 {
@@ -22,6 +23,8 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
 
     public function handle(): void
     {
+        Log::info("CreateAndSearchForTracksJob started");
+
         $tracksToAdd = $this->playlistModel
             ->tracks()
             ->get()

@@ -9,6 +9,7 @@ use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class CreateAndSearchForTracksJob implements ShouldQueue
@@ -25,6 +26,8 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
     public function handle(): void
     {
+        Log::info("CreateAndSearchForTracksJob started");
+
         try {
             $destination = $this->playlistTransfer->destinationApi();
 
