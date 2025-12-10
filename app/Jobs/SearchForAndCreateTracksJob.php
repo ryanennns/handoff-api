@@ -6,7 +6,6 @@ use App\Helpers\TrackDto;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
-use App\Services\StreamingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -62,12 +61,11 @@ class SearchForAndCreateTracksJob implements ShouldQueue
             ->first();
 
         if ($trackModel) {
-            $trackModel->update([
-                'remote_ids' => array_merge(
-                    $trackModel->remote_ids,
-                    $remoteIds,
-                )
-            ]);
+            $trackModel->remote_ids = array_merge(
+                $trackModel->remote_ids,
+                $remoteIds,
+            );
+            $trackModel->save();
 
             return $trackModel;
         }
