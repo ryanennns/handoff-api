@@ -78,6 +78,7 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                 ]);
             })->dispatch();
         } catch (Throwable $e) {
+            $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
             $this->fail($e);
         }
     }
