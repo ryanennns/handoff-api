@@ -21,29 +21,35 @@ class PlaylistTransferJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("PlaylistTransferJob started");
+        try {
+            Log::info("PlaylistTransferJob started");
 
-        $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
+            $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
 
-        Bus::chain(
-            [
-                ...collect($this->playlistTransfer->playlists)
-                    ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
-                    ->toArray(),
-                new FinishPlaylistTransferJob($this->playlistTransfer),
-            ]
-        )->catch(function (Throwable $throwable) {
+            Bus::chain(
+                [
+                    ...collect($this->playlistTransfer->playlists)
+                        ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
+                        ->toArray(),
+                    new FinishPlaylistTransferJob($this->playlistTransfer),
+                ]
+            )->catch(function (Throwable $throwable) {
+                $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
+
+                Log::error(
+                    "A failure occurred with a playlist transfer ",
+                    [
+                        'exception' => [
+                            'message' => $throwable->getMessage(),
+                            'trace'   => $throwable->getTraceAsString(),
+                        ]
+                    ]
+                );
+            })->dispatch();
+        } catch (Throwable $e) {
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
 
-            Log::error(
-                "A failure occurred with a playlist transfer ",
-                [
-                    'exception' => [
-                        'message' => $throwable->getMessage(),
-                        'trace'   => $throwable->getTraceAsString(),
-                    ]
-                ]
-            );
-        })->dispatch();
+            $this->fail($e);
+        }
     }
 }
