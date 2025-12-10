@@ -34,17 +34,22 @@ class CreateAndSearchForTracksJob implements ShouldQueue
             $destination = $this->playlistTransfer->destinationApi();
 
             $candidates = $destination->searchTrack($this->track);
-            $candidates = collect($candidates)
-                ->reject(fn($c) => $c->name !== $this->track->name && $c->name !== $this->track->trimmedName())
-                ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
-                ->reject(fn($c) => empty($c->artists));
 
-            $finalCandidate = collect($candidates)->first(
-                fn($candidate) => collect($this->track->artists)->contains(
-                    fn($a) => levenshtein($a, $candidate->artists[0]) < 2
-                        || levenshtein(strtolower($a), $candidate->artists[0]) < 2
-                )
-            );
+            $finalCandidate = collect($candidates)->first(fn(TrackDto $dto) => $dto->isrc === $this->track->isrc);
+
+            if (!$finalCandidate) {
+                $candidates = collect($candidates)
+                    ->reject(fn($c) => $c->name !== $this->track->name && $c->name !== $this->track->trimmedName())
+                    ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
+                    ->reject(fn($c) => empty($c->artists));
+
+                $finalCandidate = collect($candidates)->first(
+                    fn($candidate) => collect($this->track->artists)->contains(
+                        fn($a) => levenshtein($a, $candidate->artists[0]) < 2
+                            || levenshtein(strtolower($a), $candidate->artists[0]) < 2
+                    )
+                );
+            }
 
             $remoteIds = [$this->playlistTransfer->source => $this->track->remote_id];
             if ($finalCandidate) {
