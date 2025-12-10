@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class CreateAndSearchForTracksJob implements ShouldQueue
@@ -35,7 +34,9 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
             $candidates = $destination->searchTrack($this->track);
 
-            $finalCandidate = collect($candidates)->first(fn(TrackDto $dto) => $dto->isrc === $this->track->isrc);
+            $finalCandidate = collect($candidates)->first(
+                fn(TrackDto $dto) => collect($this->track->isrc_ids)->hasAny($dto->isrc_ids)
+            );
 
             if (!$finalCandidate) {
                 $candidates = collect($candidates)
@@ -71,12 +72,12 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
     public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
     {
-        if (!$track->isrc) {
+        if (!$track->isrc_ids) {
             return null;
         }
 
         $trackModel = Track::query()
-            ->where(['isrc' => $track->isrc])
+            ->whereJsonContains('isrc_ids', $track->isrc_ids)
             ->first();
 
         if ($trackModel) {
@@ -90,7 +91,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
 
         return Track::query()->create([
-            'isrc'       => $track->isrc,
+            'isrc_ids'   => $track->isrc_ids,
             'name'       => $track->name,
             'artists'    => $track->artists,
             'album'      => Arr::get($track->album, 'name'),

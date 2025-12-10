@@ -99,7 +99,7 @@ class TidalService extends StreamingService
                 return new TrackDto([
                     'source'    => self::PROVIDER,
                     'remote_id' => Arr::get($trackJson, 'data.id'),
-                    'isrc'      => Arr::get($trackJson, 'data.attributes.isrc'),
+                    'isrc_ids'  => [Arr::get($trackJson, 'data.attributes.isrc')],
                     'name'      => Arr::get($trackJson, 'data.attributes.title'),
                     'artists'   => [$primaryArtistName]
                 ]);
@@ -186,7 +186,7 @@ class TidalService extends StreamingService
         return collect($results)->map(fn($candidate) => new TrackDto([
             'source'    => self::PROVIDER,
             'remote_id' => Arr::get($candidate, 'id'),
-            'isrc'      => Arr::get($candidate, 'attributes.isrc'),
+            'isrc_ids'  => [Arr::get($candidate, 'attributes.isrc')],
             'name'      => Arr::get($candidate, 'attributes.title'),
             'version'   => Arr::get($candidate, 'attributes.version'),
             'meta'      => [

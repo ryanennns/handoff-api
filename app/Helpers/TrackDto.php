@@ -8,7 +8,7 @@ class TrackDto
 {
     public ?string $source;
     public ?string $remote_id;
-    public ?string $isrc;
+    public ?array $isrc_ids;
     public ?string $name;
     public ?array $artists;
     public ?bool $explicit;
@@ -20,7 +20,7 @@ class TrackDto
     {
         $this->source = Arr::get($contents, 'source');
         $this->remote_id = Arr::get($contents, 'remote_id');
-        $this->isrc = Arr::get($contents, 'isrc');
+        $this->isrc_ids = Arr::get($contents, 'isrc_ids');
         $this->name = Arr::get($contents, 'name');
         $this->artists = Arr::get($contents, 'artists');
         $this->explicit = Arr::get($contents, 'explicit') ?? false;

@@ -67,7 +67,7 @@ class CreateAndSearchForTracksJobTest extends TestCase
         /** @var Track $track */
         $track = Track::factory()->create([
             'remote_ids' => $remoteIds,
-            'isrc'       => $isrc,
+            'isrc_ids'   => [$isrc],
         ]);
 
         $playlistTransfer = PlaylistTransfer::factory()->create([
@@ -111,7 +111,7 @@ class CreateAndSearchForTracksJobTest extends TestCase
         /** @var Track $track */
         $track = Track::factory()->create([
             'remote_ids' => $remoteIds,
-            'isrc'       => $isrc,
+            'isrc_ids'       => [$isrc],
         ]);
 
         /** @var PlaylistTransfer $playlistTransfer */

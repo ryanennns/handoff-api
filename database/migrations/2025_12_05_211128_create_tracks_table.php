@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('tracks', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('isrc'); // TODO make unique
+            $table->json('isrc_ids');
             $table->string('name');
             $table->json('artists');
             $table->string('album');
