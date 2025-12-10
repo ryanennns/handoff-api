@@ -14,12 +14,11 @@ class IncrementPlaylistsProcessedJob implements ShouldQueue
         private PlaylistTransfer $playlistTransfer
     )
     {
-        $this->playlistTransfer->playlists_processed += 1;
-        $this->playlistTransfer->save();
     }
 
     public function handle(): void
     {
-        //
+        $this->playlistTransfer->playlists_processed += 1;
+        $this->playlistTransfer->save();
     }
 }

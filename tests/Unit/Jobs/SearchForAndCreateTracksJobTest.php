@@ -91,7 +91,6 @@ class SearchForAndCreateTracksJobTest extends TestCase
 
         new SearchForAndCreateTracksJob(
             $playlistTransfer,
-            'asdf',
             $playlist,
             $track->toDto($playlistTransfer->source),
         )->handle();
