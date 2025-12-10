@@ -18,7 +18,6 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
         private readonly Playlist         $playlistModel,
     )
     {
-        //
     }
 
     public function handle(): void
@@ -29,15 +28,15 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
             ->filter(fn(Track $t) => array_key_exists(
                 $this->playlistTransfer->destination,
                 $t->remote_ids,
-            ));
+            ))
+            ->map(fn(Track $track) => $track->toDto($this->playlistTransfer->source))
+            ->toArray();
 
         $this->playlistTransfer
             ->destinationApi()
             ->addTracksToPlaylist(
                 $this->playlistId,
-                $tracksToAdd->map(
-                    fn(Track $track) => $track->toDto($this->playlistTransfer->source)
-                )->toArray(),
+                $tracksToAdd,
             );
     }
 }

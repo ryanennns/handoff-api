@@ -18,7 +18,6 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
         private readonly array            $playlist
     )
     {
-        //
     }
 
     public function handle(): void

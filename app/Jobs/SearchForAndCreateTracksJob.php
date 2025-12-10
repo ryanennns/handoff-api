@@ -23,7 +23,6 @@ class SearchForAndCreateTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        $source = $this->playlistTransfer->sourceApi();
         $destination = $this->playlistTransfer->destinationApi();
 
         $candidates = $destination->searchTrack($this->track);
@@ -39,7 +38,7 @@ class SearchForAndCreateTracksJob implements ShouldQueue
             )
         );
 
-        $remoteIds = [$source::PROVIDER => $this->track->remote_id];
+        $remoteIds = [$this->playlistTransfer->source => $this->track->remote_id];
         if ($finalCandidate) {
             $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
         }
