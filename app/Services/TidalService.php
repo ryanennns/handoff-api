@@ -6,6 +6,8 @@ use App\ApiClients\TidalApi;
 use App\Helpers\TrackDto;
 use App\Models\OauthCredential;
 use Carbon\Carbon;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -48,15 +50,40 @@ class TidalService extends StreamingService
         ]);
     }
 
+    public function makeRequest(
+        string $method,
+        string $endpoint,
+        array  $params = [],
+    ): PromiseInterface|Response
+    {
+        if (Config::get('app.env') === 'production') {
+            $this->maybeRefreshToken();
+        }
+
+        $response = TidalApi::withToken($this->oauthCredential->token)
+            ->$method($endpoint, $params);
+
+        if ($response->failed()) {
+            Log::error("Failed to make request to Tidal API", [
+                'method'   => $method,
+                'endpoint' => $endpoint,
+                'params'   => $params,
+            ]);
+        }
+
+        return $response;
+    }
+
     public function getPlaylists(): array
     {
-        $this->maybeRefreshToken();
-
-        $playlistResponse = TidalApi::withToken($this->oauthCredential->token)
-            ->get(self::BASE_URL . '/playlists', [
+        $playlistResponse = $this->makeRequest(
+            'get',
+            self::BASE_URL . '/playlists',
+            [
                 'countryCode'         => 'CA', // todo whatado about this :/
                 'filter[r.owners.id]' => $this->oauthCredential->provider_id,
-            ]);
+            ]
+        );
 
         return collect(Arr::get($playlistResponse->json(), 'data', []))
             ->map(function ($item) {
@@ -75,24 +102,30 @@ class TidalService extends StreamingService
 
     public function getPlaylistTracks(string $playlistId): array
     {
-        $this->maybeRefreshToken();
-
-        $tracksResponse = TidalApi::withToken($this->oauthCredential->token)
-            ->get(self::BASE_URL . '/playlists/' . $playlistId . '/relationships/items', []);
+        $tracksResponse = $this->makeRequest(
+            'get',
+            self::BASE_URL . "/playlists/$playlistId/relationships/items"
+        );
 
         $tracksJson = $tracksResponse->json();
         return collect(Arr::get($tracksJson, 'data', []))
             ->map(function ($item) {
-                $trackResponse = TidalApi::withToken($this->oauthCredential->token)
-                    ->get(self::BASE_URL . "/tracks/{$item['id']}");
+                $trackResponse = $this->makeRequest(
+                    'get',
+                    self::BASE_URL . "/tracks/{$item['id']}",
+                );
                 $trackJson = $trackResponse->json();
 
-                $artistResponse = TidalApi::withToken($this->oauthCredential->token)
-                    ->get(self::BASE_URL . "/tracks/{$item['id']}/relationships/artists");
+                $artistResponse = $this->makeRequest(
+                    'get',
+                    self::BASE_URL . "/tracks/{$item['id']}/relationships/artists",
+                );
 
                 $artistId = Arr::get($artistResponse->json(), 'data.0.id');
-                $artistResponse = TidalApi::withToken($this->oauthCredential->token)
-                    ->get(self::BASE_URL . "/artists/$artistId");
+                $artistResponse = $this->makeRequest(
+                    'get',
+                    self::BASE_URL . "/artists/$artistId",
+                );
 
                 $primaryArtistName = Arr::get($artistResponse->json(), 'data.attributes.name');
 
@@ -108,10 +141,10 @@ class TidalService extends StreamingService
 
     public function createPlaylist(string $name): string|false
     {
-        $this->maybeRefreshToken();
-
-        $createPlaylistResponse = TidalApi::withToken($this->oauthCredential->token)
-            ->post(self::BASE_URL . '/playlists', [
+        $createPlaylistResponse = $this->makeRequest(
+            'post',
+            self::BASE_URL . '/playlists',
+            [
                 'data' => [
                     'type'       => 'playlists',
                     'attributes' => [
@@ -146,17 +179,19 @@ class TidalService extends StreamingService
 
     public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool
     {
-        $this->maybeRefreshToken();
-
         $payload = [[
             'id'   => $track->remote_id,
             'type' => 'tracks',
             'meta' => $track->meta,
         ]];
-        $addToPlaylistResponse = TidalApi::withToken($this->oauthCredential->token)
-            ->post(self::BASE_URL . "/playlists/$playlistId/relationships/items", [
-                'data' => $payload
-            ]);
+        $addToPlaylistResponse =
+            $this->makeRequest(
+                'post',
+                self::BASE_URL . "/playlists/$playlistId/relationships/items",
+                [
+                    'data' => $payload
+                ]
+            );
 
         if ($addToPlaylistResponse->failed()) {
             Log::error('Tidal Track API Error', [
@@ -174,13 +209,11 @@ class TidalService extends StreamingService
 
     public function searchTrack(TrackDto $track): array
     {
-        $this->maybeRefreshToken();
-
-        $response = TidalApi::withToken($this->oauthCredential->token)
-            ->get(
-                self::BASE_URL . '/searchResults/' . $track->toSearchString(),
-                ['countryCode' => 'US', 'include' => 'tracks']
-            );
+        $response = $this->makeRequest(
+            'get',
+            self::BASE_URL . '/searchResults/' . $track->toSearchString(),
+            ['countryCode' => 'US', 'include' => 'tracks'],
+        );
 
         $results = Arr::get($response->json(), 'included');
         return collect($results)->map(fn($candidate) => new TrackDto([
@@ -197,16 +230,18 @@ class TidalService extends StreamingService
 
     public function fillMissingInfo(TrackDto $track): TrackDto
     {
-        $this->maybeRefreshToken();
-
         $primaryArtistLink = $track->meta['primaryArtistLink'];
 
-        $response = TidalApi::withToken($this->oauthCredential->token)
-            ->get(self::BASE_URL . $primaryArtistLink);
+        $response = $this->makeRequest(
+            'get',
+            self::BASE_URL . $primaryArtistLink
+        );
 
         $artistId = Arr::get($response->json(), 'data.0.id');
-        $response = TidalApi::withToken($this->oauthCredential->token)
-            ->get(self::BASE_URL . "/artists/$artistId");
+        $response = $this->makeRequest(
+            'get',
+            self::BASE_URL . "/artists/$artistId"
+        );
 
         $track->artists = [Arr::get($response->json(), 'data.attributes.name')];
 
