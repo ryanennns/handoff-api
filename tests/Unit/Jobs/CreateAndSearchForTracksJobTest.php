@@ -3,7 +3,7 @@
 namespace Tests\Unit\Jobs;
 
 use App\Helpers\TrackDto;
-use App\Jobs\SearchForAndCreateTracksJob;
+use App\Jobs\CreateAndSearchForTracksJob;
 use App\Models\OauthCredential;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
@@ -17,7 +17,7 @@ use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-class SearchForAndCreateTracksJobTest extends TestCase
+class CreateAndSearchForTracksJobTest extends TestCase
 {
     use RefreshDatabase;
     use WithFaker;
@@ -89,7 +89,7 @@ class SearchForAndCreateTracksJobTest extends TestCase
                 ])
             ]);
 
-        new SearchForAndCreateTracksJob(
+        new CreateAndSearchForTracksJob(
             $playlistTransfer,
             $playlist,
             $track->toDto($playlistTransfer->source),

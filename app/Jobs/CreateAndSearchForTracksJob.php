@@ -9,7 +9,7 @@ use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class SearchForAndCreateTracksJob implements ShouldQueue
+class CreateAndSearchForTracksJob implements ShouldQueue
 {
     use Queueable;
 

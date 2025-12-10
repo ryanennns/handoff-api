@@ -50,7 +50,7 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
         Bus::chain(
             [
                 ...collect($tracks)
-                    ->map(fn($t) => new SearchForAndCreateTracksJob(
+                    ->map(fn($t) => new CreateAndSearchForTracksJob(
                         $this->playlistTransfer,
                         $playlistModel,
                         $t,
