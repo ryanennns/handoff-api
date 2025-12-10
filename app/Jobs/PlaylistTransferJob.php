@@ -31,6 +31,8 @@ class PlaylistTransferJob implements ShouldQueue
                 new FinishPlaylistTransferJob($this->playlistTransfer),
             ]
         )->catch(function (Throwable $throwable) {
+            $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
+
             Log::error(
                 "A failure occurred with playlist transfer ID {$this->playlistTransfer->getKey()}",
                 [
