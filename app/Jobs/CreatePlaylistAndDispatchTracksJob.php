@@ -65,11 +65,8 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                 new IncrementPlaylistsProcessedJob($this->playlistTransfer),
             ]
         )->catch(function (Throwable $e) {
-            Log::error("A failure occurred with playlist transfer ID {$this->playlistTransfer->getKey()}", [
-                'class'                   => self::class,
-                'playlist_transfer_model' => $this->playlistTransfer->toArray(),
-                'playlist'                => $this->playlist,
-                'exception'               => [
+            Log::error("A failure occurred with a playlist transfer", [
+                'exception' => [
                     'message' => $e->getMessage(),
                     'trace'   => $e->getTraceAsString(),
                 ],

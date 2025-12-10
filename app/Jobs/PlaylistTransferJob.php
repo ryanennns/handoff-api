@@ -34,11 +34,9 @@ class PlaylistTransferJob implements ShouldQueue
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
 
             Log::error(
-                "A failure occurred with playlist transfer ID {$this->playlistTransfer->getKey()}",
+                "A failure occurred with a playlist transfer ",
                 [
-                    'class'                   => self::class,
-                    'playlist_transfer_model' => $this->playlistTransfer->toArray(),
-                    'exception'               => [
+                    'exception' => [
                         'message' => $throwable->getMessage(),
                         'trace'   => $throwable->getTraceAsString(),
                     ]
