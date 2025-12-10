@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Helpers\TrackDto;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
@@ -36,15 +35,9 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
             ->destinationApi()
             ->addTracksToPlaylist(
                 $this->playlistId,
-                $tracksToAdd->map(fn(Track $track) => new TrackDto([
-                    'source'    => $this->playlistTransfer->source,
-                    'remote_id' => $track->remote_ids[$this->playlistTransfer->source],
-                    'isrc'      => $track->isrc,
-                    'name'      => $track->name,
-                    'artists'   => $track->artists,
-                    'album'     => ['name' => $track->album],
-                    'explicit'  => $track->explicit,
-                ]))->toArray(),
+                $tracksToAdd->map(
+                    fn(Track $track) => $track->toDto($this->playlistTransfer->source)
+                )->toArray(),
             );
     }
 }

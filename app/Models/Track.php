@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\TrackDto;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,5 +23,18 @@ class Track extends Model
     public function playlists(): BelongsToMany
     {
         return $this->belongsToMany(Playlist::class);
+    }
+
+    public function toDto(string $source): TrackDto
+    {
+        return new TrackDto([
+            'source'    => $source,
+            'remote_id' => $this->remote_ids[$source],
+            'isrc'      => $this->isrc,
+            'name'      => $this->name,
+            'artists'   => $this->artists,
+            'album'     => ['name' => $this->album],
+            'explicit'  => $this->explicit,
+        ]);
     }
 }
