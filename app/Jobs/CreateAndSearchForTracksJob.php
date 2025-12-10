@@ -37,7 +37,13 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
             $finalCandidate = collect($candidates)->first(fn(TrackDto $dto) => $dto->isrc === $this->track->isrc);
 
+            if ($finalCandidate) {
+                Log::info("Found ISRC match for {$this->track->name}/{$this->track->isrc}");
+            }
+
             if (!$finalCandidate) {
+                Log::info("Failed to find ISRC match for {$this->track->name}/{$this->track->isrc}");
+
                 $candidates = collect($candidates)
                     ->reject(fn($c) => $c->name !== $this->track->name && $c->name !== $this->track->trimmedName())
                     ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
@@ -53,6 +59,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
             $remoteIds = [$this->playlistTransfer->source => $this->track->remote_id];
             if ($finalCandidate) {
+                Log::info("Found next best match for {$this->track->name}/{$this->track->isrc}");
                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
             }
 
