@@ -18,6 +18,8 @@ class CreateAndSearchForTracksJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public int $tries = 5;
+
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,
         private readonly Playlist         $playlist,

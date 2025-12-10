@@ -13,6 +13,8 @@ class IncrementPlaylistsProcessedJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public int $tries = 5;
+
     public function __construct(
         private PlaylistTransfer $playlistTransfer
     )

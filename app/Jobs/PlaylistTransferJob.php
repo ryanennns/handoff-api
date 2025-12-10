@@ -15,6 +15,8 @@ class PlaylistTransferJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public int $tries = 1;
+
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,
     )
