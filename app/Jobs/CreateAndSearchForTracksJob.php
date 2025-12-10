@@ -8,6 +8,7 @@ use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -15,6 +16,7 @@ use Throwable;
 class CreateAndSearchForTracksJob implements ShouldQueue
 {
     use Queueable;
+    use SerializesModels;
 
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,

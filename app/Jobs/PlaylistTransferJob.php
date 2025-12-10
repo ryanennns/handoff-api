@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -12,6 +13,7 @@ use Throwable;
 class PlaylistTransferJob implements ShouldQueue
 {
     use Queueable;
+    use SerializesModels;
 
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,
