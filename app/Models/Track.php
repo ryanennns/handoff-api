@@ -15,8 +15,8 @@ class Track extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'artists'    => 'array',
-        'remote_ids' => 'array',
+        'artists'    => 'json',
+        'remote_ids' => 'json',
     ];
 
     public function playlists(): BelongsToMany

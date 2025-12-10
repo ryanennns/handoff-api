@@ -42,9 +42,9 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
                     'isrc'      => $track->isrc,
                     'name'      => $track->name,
                     'artists'   => $track->artists,
-                    'album'     => $track->album,
+                    'album'     => ['name' => $track->album],
                     'explicit'  => $track->explicit,
-                ])),
+                ]))->toArray(),
             );
     }
 }

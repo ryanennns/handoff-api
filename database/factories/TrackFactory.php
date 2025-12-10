@@ -11,7 +11,7 @@ class TrackFactory extends Factory
         return [
             'isrc'       => $this->faker->uuid(),
             'name'       => $this->faker->word(),
-            'artists'    => $this->faker->name(),
+            'artists'    => [$this->faker->name()],
             'album'      => $this->faker->word(),
             'explicit'   => $this->faker->boolean(),
             'remote_ids' => [
