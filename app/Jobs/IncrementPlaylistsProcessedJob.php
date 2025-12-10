@@ -21,8 +21,6 @@ class IncrementPlaylistsProcessedJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("CreateAndSearchForTracksJob finished");
-
         $this->playlistTransfer->playlists_processed += 1;
         $this->playlistTransfer->save();
     }

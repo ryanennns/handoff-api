@@ -25,8 +25,6 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("CreateAndSearchForTracksJob started");
-
         $tracksToAdd = $this->playlistModel
             ->tracks()
             ->get()

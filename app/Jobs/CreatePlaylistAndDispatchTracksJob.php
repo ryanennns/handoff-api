@@ -25,8 +25,6 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("CreatePlaylistAndDispatchTracksJob started");
-
         try {
             $source = $this->playlistTransfer->sourceApi();
             $destination = $this->playlistTransfer->destinationApi();

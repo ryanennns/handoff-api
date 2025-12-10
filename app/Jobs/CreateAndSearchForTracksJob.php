@@ -28,8 +28,6 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("CreateAndSearchForTracksJob started");
-
         try {
             $destination = $this->playlistTransfer->destinationApi();
 
