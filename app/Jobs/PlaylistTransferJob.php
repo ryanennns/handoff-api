@@ -29,12 +29,9 @@ class PlaylistTransferJob implements ShouldQueue
             $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
 
             Bus::chain(
-                [
-                    ...collect($this->playlistTransfer->playlists)
-                        ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
-                        ->toArray(),
-                    new FinishPlaylistTransferJob($this->playlistTransfer),
-                ]
+                collect($this->playlistTransfer->playlists)
+                    ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
+                    ->toArray(),
             )->catch(function (Throwable $throwable) {
                 Log::error(
                     "A failure occurred with a playlist transfer ",
