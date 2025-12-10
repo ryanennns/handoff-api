@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Helpers\TrackDto;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Arr;
 
 class Track extends Model
 {
@@ -15,12 +17,25 @@ class Track extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'artists'    => 'array',
-        'remote_ids' => 'array',
+        'artists'    => 'json',
+        'remote_ids' => 'json',
     ];
 
     public function playlists(): BelongsToMany
     {
         return $this->belongsToMany(Playlist::class);
+    }
+
+    public function toDto(string $source): TrackDto
+    {
+        return new TrackDto([
+            'source'    => $source,
+            'remote_id' => Arr::get($this->remote_ids, $source),
+            'isrc'      => $this->isrc,
+            'name'      => $this->name,
+            'artists'   => $this->artists,
+            'album'     => ['name' => $this->album],
+            'explicit'  => $this->explicit,
+        ]);
     }
 }

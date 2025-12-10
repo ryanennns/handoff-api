@@ -7,7 +7,6 @@ use App\Jobs\PlaylistTransferJob;
 use App\Models\OauthCredential;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
-use App\Models\Track;
 use App\Services\SpotifyService;
 use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,6 +28,8 @@ class PlaylistTransferJobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->withoutExceptionHandling();
 
         $this->destinationMock = Mockery::mock(TidalService::class);
         $this->sourceMock = Mockery::mock(SpotifyService::class);
@@ -151,8 +152,10 @@ class PlaylistTransferJobTest extends TestCase
             ->andReturn('fake-playlist-id');
         $this->destinationMock->shouldReceive('searchTrack')
             ->andReturn([]);
+        $this->destinationMock->shouldReceive('addTracksToPlaylist')
+            ->once();
 
-        $job = PlaylistTransfer::factory()->create([
+        $pt = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
@@ -160,7 +163,7 @@ class PlaylistTransferJobTest extends TestCase
                 ['id' => 'asdf', 'name' => 'snickers']
             ]
         ]);
-        (new PlaylistTransferJob($job))->handle();
+        (new PlaylistTransferJob($pt))->handle();
 
         $this->assertDatabaseHas('tracks', [
             'isrc'       => 'USUM72005901',
@@ -270,6 +273,8 @@ class PlaylistTransferJobTest extends TestCase
             ->andReturn('fake-playlist-id');
         $this->destinationMock->shouldReceive('searchTrack')
             ->andReturn([]);
+        $this->destinationMock->shouldReceive('addTracksToPlaylist')
+            ->once();
 
         $job = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
@@ -290,7 +295,7 @@ class PlaylistTransferJobTest extends TestCase
 
     public function test_it_creates_one_playlist_if_transferred_twice()
     {
-
+        $this->happyPathApiMocks();
         $job = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
@@ -349,6 +354,7 @@ class PlaylistTransferJobTest extends TestCase
                 'artists'   => ['2hollis', 'brakence']
             ]));
 
-        $this->destinationMock->shouldReceive('addTracksToPlaylist');
+        $this->destinationMock->shouldReceive('addTracksToPlaylist')
+            ->once();
     }
 }
