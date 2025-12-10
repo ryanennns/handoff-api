@@ -13,6 +13,7 @@ return new class extends Migration {
                 ->constrained();
             $table->foreignUuid('track_id')
                 ->constrained();
+            $table->unique(['playlist_id', 'track_id']);
             $table->timestamps();
         });
     }
