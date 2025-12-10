@@ -2,23 +2,15 @@
 
 namespace Tests\Unit\Jobs;
 
-use App\Helpers\TrackDto;
-use App\Jobs\PlaylistTransferJob;
 use App\Jobs\PopulatePlaylistWithTracksJob;
-use App\Models\OauthCredential;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\Track;
-use App\Models\User;
-use App\Services\SpotifyService;
 use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Str;
 use Mockery;
-use Mockery\MockInterface;
 use Tests\TestCase;
-use function GuzzleHttp\json_encode;
 
 class PopulatePlaylistsWithTracksJobTest extends TestCase
 {
