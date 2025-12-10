@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
 {
@@ -63,6 +64,16 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                 ),
                 new IncrementPlaylistsProcessedJob($this->playlistTransfer),
             ]
-        )->dispatch();
+        )->catch(function (Throwable $e) {
+            Log::error("A failure occurred with playlist transfer ID {$this->playlistTransfer->getKey()}", [
+                'class'                   => self::class,
+                'playlist_transfer_model' => $this->playlistTransfer->toArray(),
+                'playlist'                => $this->playlist,
+                'exception'               => [
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTraceAsString(),
+                ],
+            ]);
+        })->dispatch();
     }
 }

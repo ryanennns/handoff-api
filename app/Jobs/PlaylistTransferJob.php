@@ -23,19 +23,25 @@ class PlaylistTransferJob implements ShouldQueue
     {
         $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_IN_PROGRESS]);
 
-        try {
-            Bus::chain(
+        Bus::chain(
+            [
+                ...collect($this->playlistTransfer->playlists)
+                    ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
+                    ->toArray(),
+                new FinishPlaylistTransferJob($this->playlistTransfer),
+            ]
+        )->catch(function (Throwable $throwable) {
+            Log::error(
+                "A failure occurred with playlist transfer ID {$this->playlistTransfer->getKey()}",
                 [
-                    ...collect($this->playlistTransfer->playlists)
-                        ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
-                        ->toArray(),
-                    new FinishPlaylistTransferJob($this->playlistTransfer),
+                    'class'                   => self::class,
+                    'playlist_transfer_model' => $this->playlistTransfer->toArray(),
+                    'exception'               => [
+                        'message' => $throwable->getMessage(),
+                        'trace'   => $throwable->getTraceAsString(),
+                    ]
                 ]
-            )->dispatch();
-        } catch (Throwable $exception) {
-            Log::error($exception->getMessage(), $exception->getTrace());
-            $this->playlistTransfer->update(['status' => PlaylistTransfer::STATUS_FAILED]);
-            return;
-        }
+            );
+        })->dispatch();
     }
 }
