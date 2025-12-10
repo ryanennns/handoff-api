@@ -34,7 +34,7 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
                 $this->playlistTransfer->destination,
                 $t->remote_ids,
             ))
-            ->map(fn(Track $track) => $track->toDto($this->playlistTransfer->source))
+            ->map(fn(Track $track) => $track->toDto($this->playlistTransfer->destination))
             ->toArray();
 
         $this->playlistTransfer
