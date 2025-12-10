@@ -30,6 +30,8 @@ class PlaylistTransferJobTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutExceptionHandling();
+
         $this->destinationMock = Mockery::mock(TidalService::class);
         $this->sourceMock = Mockery::mock(SpotifyService::class);
 
@@ -348,7 +350,5 @@ class PlaylistTransferJobTest extends TestCase
                 'name'      => 'oh wow nice collab',
                 'artists'   => ['2hollis', 'brakence']
             ]));
-
-        $this->destinationMock->shouldReceive('addTracksToPlaylist');
     }
 }

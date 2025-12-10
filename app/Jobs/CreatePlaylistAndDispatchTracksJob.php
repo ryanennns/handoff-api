@@ -52,13 +52,13 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
             [
                 ...collect($tracks)
                     ->map(fn($t) => new SearchForAndCreateTracksJob(
-                        $source,
-                        $destination,
+                        $this->playlistTransfer,
                         $playlistId,
                         $playlistModel,
                         $t,
                     ))
                     ->toArray(),
+                new PopulatePlaylistWithTracksJob($this->playlistTransfer, $playlistId, $playlistModel),
                 new IncrementPlaylistsProcessedJob($this->playlistTransfer),
             ]
         )->dispatch();

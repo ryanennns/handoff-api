@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Helpers\TrackDto;
 use App\Models\Playlist;
+use App\Models\PlaylistTransfer;
 use App\Models\Track;
 use App\Services\StreamingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,8 +15,7 @@ class SearchForAndCreateTracksJob implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        private readonly StreamingService $source,
-        private readonly StreamingService $destination,
+        private readonly PlaylistTransfer $playlistTransfer,
         private readonly string           $playlistId,
         private readonly Playlist         $playlist,
         private TrackDto                  $track,
@@ -25,10 +25,13 @@ class SearchForAndCreateTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        $candidates = $this->destination->searchTrack($this->track);
+        $source = $this->playlistTransfer->sourceApi();
+        $destination = $this->playlistTransfer->destinationApi();
+
+        $candidates = $destination->searchTrack($this->track);
         $candidates = collect($candidates)
             ->reject(fn($c) => $c->name !== $this->track->name && $c->name !== $this->track->trimmedName())
-            ->map(fn($c) => is_null($c->artists) ? $this->destination->fillMissingInfo($c) : $c)
+            ->map(fn($c) => is_null($c->artists) ? $destination->fillMissingInfo($c) : $c)
             ->reject(fn($c) => empty($c->artists));
 
         $finalCandidate = collect($candidates)->first(
@@ -38,17 +41,14 @@ class SearchForAndCreateTracksJob implements ShouldQueue
             )
         );
 
-        $remoteIds = [$this->source::PROVIDER => $this->track->remote_id];
+        $remoteIds = [$source::PROVIDER => $this->track->remote_id];
         if ($finalCandidate) {
-            $remoteIds[$this->destination::PROVIDER] = $finalCandidate->remote_id;
-            $this->destination->addTracksToPlaylist($this->playlistId, $finalCandidate);
+            $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
         }
 
-        $model = $this->updateOrCreateTrack($this->track, $remoteIds);
-        if ($model) {
+        if ($model = $this->updateOrCreateTrack($this->track, $remoteIds)) {
             $this->playlist->tracks()->save($model);
         }
-
     }
 
     public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
