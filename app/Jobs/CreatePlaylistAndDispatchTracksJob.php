@@ -53,7 +53,6 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                 ...collect($tracks)
                     ->map(fn($t) => new SearchForAndCreateTracksJob(
                         $this->playlistTransfer,
-                        $playlistId,
                         $playlistModel,
                         $t,
                     ))

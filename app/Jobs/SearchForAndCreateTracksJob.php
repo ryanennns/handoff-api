@@ -15,7 +15,6 @@ class SearchForAndCreateTracksJob implements ShouldQueue
 
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,
-        private readonly string           $playlistId,
         private readonly Playlist         $playlist,
         private TrackDto                  $track,
     )
