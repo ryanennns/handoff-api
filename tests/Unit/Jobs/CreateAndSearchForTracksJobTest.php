@@ -101,6 +101,58 @@ class CreateAndSearchForTracksJobTest extends TestCase
         );
     }
 
+    public function test_it_associates_songs_to_playlist_once()
+    {
+        $isrc = 'asdf';
+        $remoteIds = [
+            'spotify'  => 'asdf',
+            'snickers' => 'awooga',
+        ];
+        /** @var Track $track */
+        $track = Track::factory()->create([
+            'remote_ids' => $remoteIds,
+            'isrc'       => $isrc,
+        ]);
+
+        /** @var PlaylistTransfer $playlistTransfer */
+        $playlistTransfer = PlaylistTransfer::factory()->create([
+            'source'      => 'spotify',
+            'destination' => 'tidal',
+            'user_id'     => $this->user()->getKey()
+        ]);
+        $playlist = Playlist::factory()->create(['user_id' => $this->user()->getKey()]);
+
+        $tidalUuid = $this->faker->uuid;
+        $this->destinationMock->shouldReceive('searchTrack')
+            ->andReturn([
+                new TrackDto([
+                    'source'    => 'tidal',
+                    'remote_id' => $tidalUuid,
+                    'name'      => $track->name,
+                    'artists'   => $track->artists,
+                    'album'     => $track->albums,
+                ])
+            ]);
+
+        new CreateAndSearchForTracksJob(
+            $playlistTransfer,
+            $playlist,
+            $track->toDto($playlistTransfer->source),
+        )->handle();
+
+        $this->assertCount(1, $playlist->tracks()->get());
+
+        $playlistTransfer = $playlistTransfer->replicate();
+
+        new CreateAndSearchForTracksJob(
+            $playlistTransfer,
+            $playlist,
+            $track->toDto($playlistTransfer->source),
+        )->handle();
+
+        $this->assertCount(1, $playlist->tracks()->get());
+    }
+
     public function happyPathApiMocks(): void
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')

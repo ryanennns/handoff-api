@@ -51,7 +51,13 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
             }
 
-            if ($model = $this->updateOrCreateTrack($this->track, $remoteIds)) {
+            $model = $this->updateOrCreateTrack($this->track, $remoteIds);
+            if (
+                $model && !$this->playlist
+                    ->tracks()
+                    ->where('tracks.id', $model->getKey())
+                    ->exists()
+            ) {
                 $this->playlist->tracks()->save($model);
             }
         } catch (Throwable $e) {
