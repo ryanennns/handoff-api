@@ -34,13 +34,13 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
         ]);
 
         $tracks = $source->getPlaylistTracks($this->playlist['id']);
-        $playlistId = $destination->createPlaylist($this->playlist['name']);
+        $destinationPlaylistId = $destination->createPlaylist($this->playlist['name']);
 
-        if (!$playlistId) {
-            Log::error("Failed to create playlist $playlistId", [
+        if (!$destinationPlaylistId) {
+            Log::error("Failed to create playlist $destinationPlaylistId", [
                 'source'      => $source::PROVIDER,
                 'destination' => $destination::PROVIDER,
-                'playlist_id' => $playlistId,
+                'playlist_id' => $destinationPlaylistId,
                 'tracks'      => json_encode($tracks)
             ]);
 
@@ -56,7 +56,11 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                         $t,
                     ))
                     ->toArray(),
-                new PopulatePlaylistWithTracksJob($this->playlistTransfer, $playlistId, $playlistModel),
+                new PopulatePlaylistWithTracksJob(
+                    $this->playlistTransfer,
+                    $destinationPlaylistId,
+                    $playlistModel
+                ),
                 new IncrementPlaylistsProcessedJob($this->playlistTransfer),
             ]
         )->dispatch();
