@@ -350,5 +350,8 @@ class PlaylistTransferJobTest extends TestCase
                 'name'      => 'oh wow nice collab',
                 'artists'   => ['2hollis', 'brakence']
             ]));
+
+        $this->destinationMock->shouldReceive('addTracksToPlaylist')
+            ->once();
     }
 }
