@@ -7,7 +7,7 @@ use App\Services\StreamingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class GetStreamingServicePlaylists extends Controller
+class GetStreamingServicePlaylistsController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {

@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
 
-class GetPlaylistsControllerTest extends TestCase
+class GetStreamingServicePlaylistsTest extends TestCase
 {
     use RefreshDatabase;
 
