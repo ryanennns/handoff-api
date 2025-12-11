@@ -58,7 +58,11 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
             }
 
-            $model = $this->updateOrCreateTrack($finalCandidate, $remoteIds);
+            $model = $this->updateOrCreateTrack(
+                $this->track,
+                $remoteIds,
+                $finalCandidate->isrc_ids ?? null,
+            );
             if (
                 $model &&
                 $this->playlist->tracks()->where('tracks.id', $model->getKey())->doesntExist()
@@ -70,12 +74,8 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
     }
 
-    public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
+    public function updateOrCreateTrack(TrackDto $track, array $remoteIds, array|null $isrc): ?Track
     {
-        if (!$track->isrc_ids) {
-            return null;
-        }
-
         $trackModel = Track::query()
             ->where(function ($query) use ($track) {
                 collect($track->isrc_ids)->each(
@@ -87,7 +87,11 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         if (!$trackModel) {
             $trackModel = Track::query()
                 ->where('name', $track->name)
-                ->whereJsonContains('artists', $track->artists)
+                ->where(function ($query) use ($track) {
+                    collect($track->artists)->each(
+                        fn(string $artist) => $query->orWhereJsonContains('artists', $artist)
+                    );
+                })
                 ->first();
         }
 
@@ -98,7 +102,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
             );
             $trackModel->isrc_ids = array_merge(
                 $trackModel->isrc_ids,
-                $track->isrc_ids,
+                $isrc
             );
             $trackModel->save();
 
@@ -106,7 +110,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
 
         return Track::query()->create([
-            'isrc_ids'   => $track->isrc_ids,
+            'isrc_ids'   => $track->isrc_ids ?? [],
             'name'       => $track->name,
             'artists'    => $track->artists,
             'album'      => Arr::get($track->album, 'name'),
