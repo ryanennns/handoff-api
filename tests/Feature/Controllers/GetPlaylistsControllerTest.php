@@ -57,7 +57,7 @@ class GetPlaylistsControllerTest extends TestCase
             ->andReturn($getPlaylistsResponse);
 
         $this->actingAs($user)
-            ->get('api/playlists?service=tidal')
+            ->get('api/streaming-service-playlists?service=tidal')
             ->assertSuccessful()
             ->assertJson([
                 'playlists' => $getPlaylistsResponse,
@@ -71,7 +71,7 @@ class GetPlaylistsControllerTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('api/playlists?service=tidal')
+            ->get('api/streaming-service-playlists?service=tidal')
             ->assertStatus(404)
             ->assertJson([
                 'message' => 'No OAuth credentials found',
@@ -83,7 +83,7 @@ class GetPlaylistsControllerTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->getJson('api/playlists')
+            ->getJson('api/streaming-service-playlists')
             ->assertUnprocessable();
     }
 }

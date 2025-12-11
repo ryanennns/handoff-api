@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/services', GetActiveServicesController::class)->name('services');
 
-    Route::get('/playlists', GetStreamingServicePlaylists::class)->name('playlists');
+    Route::get('/streaming-service-playlists', GetStreamingServicePlaylists::class)->name('playlists');
 });
 
 Route::get('/dumping-ground', function () {
