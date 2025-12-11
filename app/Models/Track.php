@@ -19,6 +19,7 @@ class Track extends Model
     protected $casts = [
         'artists'    => 'json',
         'remote_ids' => 'json',
+        'isrc_ids'   => 'json',
     ];
 
     public function playlists(): BelongsToMany
@@ -31,7 +32,7 @@ class Track extends Model
         return new TrackDto([
             'source'    => $source,
             'remote_id' => Arr::get($this->remote_ids, $source),
-            'isrc'      => $this->isrc,
+            'isrc_ids'  => $this->isrc_ids,
             'name'      => $this->name,
             'artists'   => $this->artists,
             'album'     => ['name' => $this->album],

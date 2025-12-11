@@ -9,7 +9,7 @@ class TrackFactory extends Factory
     public function definition(): array
     {
         return [
-            'isrc'       => $this->faker->uuid(),
+            'isrc_ids'   => [$this->faker->uuid()],
             'name'       => $this->faker->word(),
             'artists'    => [$this->faker->name()],
             'album'      => $this->faker->word(),

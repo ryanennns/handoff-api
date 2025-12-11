@@ -558,8 +558,8 @@ class TidalServiceTest extends TestCase
 
         collect($playlistTracks)->each(fn($t) => $this->assertInstanceOf(TrackDto::class, $t));
 
-        $this->assertEquals("USJZ10900031", $playlistTracks[0]->isrc);
-        $this->assertEquals("USQX91301194", $playlistTracks[1]->isrc);
+        $this->assertEquals(["USJZ10900031"], $playlistTracks[0]->isrc_ids);
+        $this->assertEquals(["USQX91301194"], $playlistTracks[1]->isrc_ids);
         $this->assertEquals("Empire State Of Mind", $playlistTracks[0]->name);
         $this->assertEquals("New York Times", $playlistTracks[1]->name);
         $this->assertEquals(["JAY Z"], $playlistTracks[0]->artists);
@@ -887,7 +887,7 @@ class TidalServiceTest extends TestCase
 
         $this->assertEquals(TidalService::PROVIDER, $candidate->source);
         $this->assertEquals('98156345', $candidate->remote_id);
-        $this->assertEquals('USUM71807679', $candidate->isrc);
+        $this->assertEquals(['USUM71807679'], $candidate->isrc_ids);
         $this->assertEquals("Yikes", $candidate->name);
         $this->assertEquals(
             "/tracks/98156345/relationships/artists?countryCode=CA",

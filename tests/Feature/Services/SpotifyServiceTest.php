@@ -116,7 +116,7 @@ class SpotifyServiceTest extends TestCase
 
         collect($playlistTracks)->each(function ($track, $index) {
             $this->assertNotNull($track->remote_id);
-            $this->assertNotNull($track->isrc);
+            $this->assertNotNull($track->isrc_ids);
             $this->assertNotNull($track->name);
             $this->assertNotNull($track->name);
             $this->assertNotNull($track->artists);
@@ -129,8 +129,8 @@ class SpotifyServiceTest extends TestCase
                 $track->remote_id
             );
             $this->assertEquals(
-                Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.external_ids.isrc"),
-                $track->isrc
+                [Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.external_ids.isrc")],
+                $track->isrc_ids
             );
             $this->assertEquals(
                 Arr::get(SpotifyResponse::PLAYLIST_TRACKS_RESPONSE_ITEMS, "$index.track.name"),
@@ -327,7 +327,7 @@ class SpotifyServiceTest extends TestCase
 
         $this->assertEquals(SpotifyService::PROVIDER, $track->source);
         $this->assertEquals(Arr::get($items, "0.uri"), $track->remote_id);
-        $this->assertEquals(Arr::get($items, "0.external_ids.isrc"), $track->isrc);
+        $this->assertEquals([Arr::get($items, "0.external_ids.isrc")], $track->isrc_ids);
         $this->assertEquals(Arr::get($items, "0.name"), $track->name);
         $this->assertEquals(
             collect(Arr::get($items, "0.artists"))

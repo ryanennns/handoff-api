@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class CreateAndSearchForTracksJob implements ShouldQueue
@@ -35,7 +34,9 @@ class CreateAndSearchForTracksJob implements ShouldQueue
 
             $candidates = $destination->searchTrack($this->track);
 
-            $finalCandidate = collect($candidates)->first(fn(TrackDto $dto) => $dto->isrc === $this->track->isrc);
+            $finalCandidate = collect($candidates)->first(
+                fn(TrackDto $dto) => collect($this->track->isrc_ids)->hasAny($dto->isrc_ids)
+            );
 
             if (!$finalCandidate) {
                 $candidates = collect($candidates)
@@ -57,7 +58,11 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
             }
 
-            $model = $this->updateOrCreateTrack($this->track, $remoteIds);
+            $model = $this->updateOrCreateTrack(
+                $this->track,
+                $remoteIds,
+                $finalCandidate->isrc_ids ?? null,
+            );
             if (
                 $model &&
                 $this->playlist->tracks()->where('tracks.id', $model->getKey())->doesntExist()
@@ -69,20 +74,35 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
     }
 
-    public function updateOrCreateTrack(TrackDto $track, array $remoteIds): ?Track
+    public function updateOrCreateTrack(TrackDto $track, array $remoteIds, array|null $isrc): ?Track
     {
-        if (!$track->isrc) {
-            return null;
-        }
-
         $trackModel = Track::query()
-            ->where(['isrc' => $track->isrc])
+            ->where(function ($query) use ($track) {
+                collect($track->isrc_ids)->each(
+                    fn(string $isrc) => $query->orWhereJsonContains('isrc_ids', $isrc)
+                );
+            })
             ->first();
+
+        if (!$trackModel) {
+            $trackModel = Track::query()
+                ->where('name', $track->name)
+                ->where(function ($query) use ($track) {
+                    collect($track->artists)->each(
+                        fn(string $artist) => $query->orWhereJsonContains('artists', $artist)
+                    );
+                })
+                ->first();
+        }
 
         if ($trackModel) {
             $trackModel->remote_ids = array_merge(
                 $trackModel->remote_ids,
                 $remoteIds,
+            );
+            $trackModel->isrc_ids = array_merge(
+                $trackModel->isrc_ids,
+                $isrc
             );
             $trackModel->save();
 
@@ -90,7 +110,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
 
         return Track::query()->create([
-            'isrc'       => $track->isrc,
+            'isrc_ids'   => $track->isrc_ids ?? [],
             'name'       => $track->name,
             'artists'    => $track->artists,
             'album'      => Arr::get($track->album, 'name'),

@@ -34,9 +34,9 @@ class PopulatePlaylistsWithTracksJobTest extends TestCase
             ->once()
             ->withArgs(function ($pid, $ts) use ($tracks, $playlistId) {
                 $this->assertEquals($pid, $playlistId);
-                $this->assertEquals($ts[0]->isrc, $tracks[0]->isrc);
-                $this->assertEquals($ts[1]->isrc, $tracks[1]->isrc);
-                $this->assertEquals($ts[2]->isrc, $tracks[2]->isrc);
+                $this->assertEquals($ts[0]->isrc_ids, $tracks[0]->isrc_ids);
+                $this->assertEquals($ts[1]->isrc_ids, $tracks[1]->isrc_ids);
+                $this->assertEquals($ts[2]->isrc_ids, $tracks[2]->isrc_ids);
 
                 return true;
             });

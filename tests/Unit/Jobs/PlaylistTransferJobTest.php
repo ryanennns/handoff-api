@@ -29,8 +29,6 @@ class PlaylistTransferJobTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutExceptionHandling();
-
         $this->destinationMock = Mockery::mock(TidalService::class);
         $this->sourceMock = Mockery::mock(SpotifyService::class);
 
@@ -85,14 +83,14 @@ class PlaylistTransferJobTest extends TestCase
     {
         $this->happyPathApiMocks();
 
-        $job = PlaylistTransfer::factory()->create([
+        $pt = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
         ]);
-        (new PlaylistTransferJob($job))->handle();
-        $job->refresh();
-        $this->assertEquals(PlaylistTransfer::STATUS_COMPLETED, $job->status);
+        (new PlaylistTransferJob($pt))->handle();
+        $pt->refresh();
+        $this->assertEquals(PlaylistTransfer::STATUS_COMPLETED, $pt->status);
     }
 
     public function test_it_updates_processed_playlists()
@@ -126,11 +124,10 @@ class PlaylistTransferJobTest extends TestCase
         ]);
         (new PlaylistTransferJob($job))->handle();
         $this->assertDatabaseHas('tracks', [
-            'isrc'     => 'USUM72005901',
+            'isrc_ids' => json_encode(['USUM72005901']),
             'name'     => 'oh wow nice collab',
             'artists'  => json_encode(['2hollis', 'brakence']),
             'album'    => 'album name',
-            'explicit' => false,
         ]);
     }
 
@@ -142,7 +139,7 @@ class PlaylistTransferJobTest extends TestCase
                 new TrackDto([
                     'source'    => 'spotify',
                     'remote_id' => $uuid,
-                    'isrc'      => 'USUM72005901',
+                    'isrc_ids'  => ['USUM72005901'],
                     'name'      => 'oh wow nice collab',
                     'artists'   => ['2hollis', 'brakence'],
                     'album'     => ['name' => 'album name'],
@@ -166,7 +163,7 @@ class PlaylistTransferJobTest extends TestCase
         (new PlaylistTransferJob($pt))->handle();
 
         $this->assertDatabaseHas('tracks', [
-            'isrc'       => 'USUM72005901',
+            'isrc_ids'   => json_encode(['USUM72005901']),
             'remote_ids' => json_encode(['spotify' => $uuid]),
         ]);
     }
@@ -180,7 +177,7 @@ class PlaylistTransferJobTest extends TestCase
                 new TrackDto([
                     'source'    => 'spotify',
                     'remote_id' => $spotifyUuid,
-                    'isrc'      => 'USUM72005901',
+                    'isrc_ids'  => ['USUM72005901'],
                     'name'      => 'oh wow nice collab',
                     'artists'   => ['2hollis', 'brakence'],
                     'album'     => ['name' => 'album name'],
@@ -218,7 +215,7 @@ class PlaylistTransferJobTest extends TestCase
         (new PlaylistTransferJob($job))->handle();
 
         $this->assertDatabaseHas('tracks', [
-            'isrc'       => 'USUM72005901',
+            'isrc_ids'   => json_encode(['USUM72005901']),
             'remote_ids' => json_encode([
                 'spotify' => $spotifyUuid,
                 'tidal'   => $tidalUuid,
@@ -253,7 +250,7 @@ class PlaylistTransferJobTest extends TestCase
         $trackOne = new TrackDto([
             'source'    => 'spotify',
             'remote_id' => Str::uuid(),
-            'isrc'      => 'USUM72005901',
+            'isrc_ids'  => ['USUM72005901'],
             'name'      => 'oh wow nice collab',
             'artists'   => ['2hollis', 'brakence'],
             'album'     => ['name' => 'album name'],
@@ -261,7 +258,7 @@ class PlaylistTransferJobTest extends TestCase
         $trackTwo = new TrackDto([
             'source'    => 'spotify',
             'remote_id' => Str::uuid(),
-            'isrc'      => 'USUM72005902',
+            'isrc_ids'  => ['USUM72005902'],
             'name'      => 'another fire track',
             'artists'   => ['artist1', 'artist2'],
             'album'     => ['name' => 'another album'],
@@ -329,7 +326,7 @@ class PlaylistTransferJobTest extends TestCase
                 new TrackDto([
                     'source'    => 'tidal',
                     'remote_id' => $this->faker->uuid,
-                    'isrc'      => 'USUM72005901',
+                    'isrc_ids'  => ['USUM72005901'],
                     'name'      => 'oh wow nice collab',
                     'artists'   => ['2hollis', 'brakence'],
                     'album'     => ['name' => 'album name'],
@@ -342,7 +339,10 @@ class PlaylistTransferJobTest extends TestCase
                 new TrackDto([
                     'source'    => 'tidal',
                     'remote_id' => $this->faker->uuid,
+                    'isrc_ids'  => ['USUM72005901'],
                     'name'      => 'oh wow nice collab',
+                    'artists'   => ['2hollis', 'brakence'],
+                    'album'     => ['name' => 'album name'],
                 ])
             ]);
 
