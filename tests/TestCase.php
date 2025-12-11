@@ -11,7 +11,7 @@ abstract class TestCase extends BaseTestCase
     private User $user;
     private OauthCredential $oauthCredential;
 
-    public function user()
+    public function user(): User
     {
         if (!isset($this->user)) {
             $this->user = User::factory()->create();
