@@ -10,10 +10,11 @@ class PlaylistResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'        => $this->id,
-            'name'      => $this->name,
-            'service'   => $this->service,
-            'remote_id' => $this->remote_id,
+            'id'               => $this->id,
+            'name'             => $this->name,
+            'service'          => $this->service,
+            'remote_id'        => $this->remote_id,
+            'number_of_tracks' => count($this->tracks)
         ];
     }
 }

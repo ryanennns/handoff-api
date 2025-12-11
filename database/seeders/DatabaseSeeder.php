@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\User;
 
@@ -15,6 +16,8 @@ class DatabaseSeeder extends Seeder
             'name'  => 'Test User',
             'email' => 'test@gmail.com',
         ]);
+
+        Playlist::factory(15)->create(['user_id' => $user->getKey()]);
 
         $user->playlistTransfers()
             ->create(
