@@ -58,7 +58,7 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $remoteIds[$destination::PROVIDER] = $finalCandidate->remote_id;
             }
 
-            $model = $this->updateOrCreateTrack($this->track, $remoteIds);
+            $model = $this->updateOrCreateTrack($finalCandidate, $remoteIds);
             if (
                 $model &&
                 $this->playlist->tracks()->where('tracks.id', $model->getKey())->doesntExist()
@@ -77,13 +77,28 @@ class CreateAndSearchForTracksJob implements ShouldQueue
         }
 
         $trackModel = Track::query()
-            ->whereJsonContains('isrc_ids', $track->isrc_ids)
+            ->where(function ($query) use ($track) {
+                collect($track->isrc_ids)->each(
+                    fn(string $isrc) => $query->orWhereJsonContains('isrc_ids', $isrc)
+                );
+            })
             ->first();
+
+        if (!$trackModel) {
+            $trackModel = Track::query()
+                ->where('name', $track->name)
+                ->whereJsonContains('artists', $track->artists)
+                ->first();
+        }
 
         if ($trackModel) {
             $trackModel->remote_ids = array_merge(
                 $trackModel->remote_ids,
                 $remoteIds,
+            );
+            $trackModel->isrc_ids = array_merge(
+                $trackModel->isrc_ids,
+                $track->isrc_ids,
             );
             $trackModel->save();
 
