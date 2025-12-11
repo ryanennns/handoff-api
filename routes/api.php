@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\GeneralOauthController;
 use App\Http\Controllers\GetActiveServicesController;
-use App\Http\Controllers\GetPlaylistsController;
+use App\Http\Controllers\GetStreamingServicePlaylists;
 use App\Http\Controllers\GetPlaylistTransfersController;
 use App\Http\Controllers\GoogleOauthController;
 use App\Http\Controllers\TidalOauthController;
@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/services', GetActiveServicesController::class)->name('services');
 
-    Route::get('/playlists', GetPLaylistsController::class)->name('playlists');
+    Route::get('/playlists', GetStreamingServicePlaylists::class)->name('playlists');
 });
 
 Route::get('/dumping-ground', function () {
