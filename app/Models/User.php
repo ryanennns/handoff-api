@@ -40,4 +40,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(PlaylistTransfer::class, 'user_id', 'id');
     }
+
+    public function playlists()
+    {
+        return $this->hasMany(Playlist::class, 'user_id', 'id');
+    }
 }
