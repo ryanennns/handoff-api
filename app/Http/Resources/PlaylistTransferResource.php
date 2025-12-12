@@ -13,7 +13,7 @@ class PlaylistTransferResource extends JsonResource
             'id'                  => $this->id,
             'source'              => $this->source,
             'destination'         => $this->destination,
-            'playlists'           => $this->playlists,
+            'playlists'           => $this->playlists()->count(),
             'playlists_processed' => $this->playlists_processed,
             'status'              => $this->status,
             'created_at'          => $this->created_at->toIso8601String(),
