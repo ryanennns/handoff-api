@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -30,8 +31,10 @@ class PlaylistTransferJob implements ShouldQueue
 
             Bus::chain(
                 collect($this->playlistTransfer->playlists)
-                    ->map(fn($pt) => new CreatePlaylistAndDispatchTracksJob($this->playlistTransfer, $pt))
-                    ->toArray(),
+                    ->map(fn(Playlist $p) => new CreatePlaylistAndDispatchTracksJob(
+                        $this->playlistTransfer,
+                        $p
+                    ))->toArray(),
             )->catch(function (Throwable $throwable) {
                 Log::error(
                     "A failure occurred with a playlist transfer ",

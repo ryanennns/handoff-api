@@ -3,10 +3,12 @@
 namespace Tests\Feature\Controllers;
 
 use App\Jobs\PlaylistTransferJob;
-use App\Models\OauthCredential;
+use App\Models\Playlist;
+use App\Models\PlaylistTransfer;
 use App\Services\SpotifyService;
 use App\Services\TidalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -14,33 +16,39 @@ use Tests\TestCase;
 class TriggerPlaylistTransferControllerTest extends TestCase
 {
     use RefreshDatabase;
+    use WithFaker;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->playlistPayload = [
+            'id'               => $this->faker->uuid(),
+            'name'             => $this->faker->word(),
+            'tracks'           => 'asdf',
+            'owner'            => [
+                'id'   => $this->user()->getKey(),
+                'name' => 'ronald mcdonanld',
+            ],
+            'number_of_tracks' => 5,
+            'image_uri'        => $this->faker->url(),
+        ];
+    }
 
     public function test_it_dispatches_playlist_transfer_job()
     {
         Bus::fake();
 
-        OauthCredential::query()->create([
-            'user_id'     => $this->user()->getKey(),
-            'provider'    => TidalService::PROVIDER,
-            'provider_id' => TidalService::PROVIDER,
-        ]);
-        OauthCredential::query()->create([
-            'user_id'     => $this->user()->getKey(),
-            'provider'    => SpotifyService::PROVIDER,
-            'provider_id' => SpotifyService::PROVIDER,
-        ]);
-
         $this->actingAs($this->user())->post('api/playlist-transfers/trigger', [
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
-            'playlists'   => ['playlist1', 'playlist2'],
+            'playlists'   => [$this->playlistPayload],
         ])->assertCreated()->assertJsonStructure([
             'message',
             'data' => [
                 'id',
                 'source',
                 'destination',
-                'playlists',
             ],
         ]);
 
@@ -53,6 +61,82 @@ class TriggerPlaylistTransferControllerTest extends TestCase
         $this->actingAs($this->user())
             ->postJson('api/playlist-transfers/trigger', $payload)
             ->assertUnprocessable();
+    }
+
+    public function test_it_creates_playlists_and_associates_them_with_playlist_transfer_model()
+    {
+        Bus::fake();
+
+        $this->assertDatabaseCount('playlists', 0);
+        $this->assertDatabaseCount('playlist_transfers', 0);
+
+        $this->actingAs($this->user())
+            ->post('api/playlist-transfers/trigger', [
+                'source'      => SpotifyService::PROVIDER,
+                'destination' => TidalService::PROVIDER,
+                'playlists'   => [$this->playlistPayload],
+            ])->assertCreated()->assertJsonStructure([
+                'message',
+                'data' => [
+                    'id',
+                    'source',
+                    'destination',
+                ],
+            ]);
+
+        $this->assertDatabaseCount('playlists', 1);
+        $this->assertDatabaseCount('playlist_transfers', 1);
+
+        $pt = PlaylistTransfer::query()->first();
+        $this->assertEquals(
+            $pt->playlists()->first()->getKey(),
+            Playlist::query()->first()->getKey()
+        );
+    }
+
+    public function test_it_updates_existing_playlist_if_already_exists()
+    {
+        Bus::fake();
+
+        $this->assertDatabaseCount('playlists', 0);
+        $this->assertDatabaseCount('playlist_transfers', 0);
+
+        $this->actingAs($this->user())
+            ->post('api/playlist-transfers/trigger', [
+                'source'      => SpotifyService::PROVIDER,
+                'destination' => TidalService::PROVIDER,
+                'playlists'   => [
+                    $this->playlistPayload
+                ],
+            ])->assertCreated()->assertJsonStructure([
+                'message',
+                'data' => [
+                    'id',
+                    'source',
+                    'destination',
+                ],
+            ]);
+
+        $this->assertDatabaseCount('playlists', 1);
+        $this->assertDatabaseCount('playlist_transfers', 1);
+
+        $this->actingAs($this->user())
+            ->post('api/playlist-transfers/trigger', [
+                'source'      => SpotifyService::PROVIDER,
+                'destination' => TidalService::PROVIDER,
+                'playlists'   => [
+                    $this->playlistPayload
+                ],
+            ])->assertCreated()->assertJsonStructure([
+                'message',
+                'data' => [
+                    'id',
+                    'source',
+                    'destination',
+                ],
+            ]);
+
+        $this->assertDatabaseCount('playlists', 1);
     }
 
     public static function provideIncompletePayloads(): array

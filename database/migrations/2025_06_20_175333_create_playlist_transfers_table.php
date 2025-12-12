@@ -11,7 +11,6 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('source');
             $table->string('destination');
-            $table->json('playlists');
             $table->integer('playlists_processed')->default(0);
             $table->enum('status', ['pending', 'in_progress', 'completed', 'failed'])
                 ->default('pending');

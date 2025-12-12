@@ -27,9 +27,20 @@ class TriggerPlaylistTransferController extends Controller
         $playlistTransfer = $user->playlistTransfers()->create([
             'source'      => $source,
             'destination' => $destination,
-            'playlists'   => $playlists,
             'status'      => PlaylistTransfer::STATUS_PENDING,
         ]);
+
+        collect($playlists)
+            ->each(function ($playlist) use ($playlistTransfer, $source, $user) {
+                $playlist = $user->playlists()->updateOrCreate([
+                    'remote_id' => $playlist['id'],
+                    'service' => $source,
+                ], [
+                    'name'    => $playlist['name'],
+                ]);
+
+                $playlistTransfer->playlists()->save($playlist);
+            });
 
         PlaylistTransferJob::dispatch($playlistTransfer);
 

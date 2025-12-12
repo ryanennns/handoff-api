@@ -63,7 +63,7 @@ class CreatePlaylistAndDispatchTracksJobTest extends TestCase
 
         new CreatePlaylistAndDispatchTracksJob(
             $playlistTransfer,
-            ['name' => 'snickers', 'id' => '123']
+            $this->newPlaylist(),
         )->handle();
 
         $playlistTransfer->refresh();
@@ -114,7 +114,7 @@ class CreatePlaylistAndDispatchTracksJobTest extends TestCase
 
         new CreatePlaylistAndDispatchTracksJob(
             $playlistTransfer,
-            ['name' => 'snickers', 'id' => '123']
+            $this->newPlaylist(),
         )->handle();
 
         $playlistTransfer->refresh();

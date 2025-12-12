@@ -15,7 +15,7 @@ class PlaylistTransferObserver
         ) {
 
             if (
-                $playlistTransfer->playlists_processed === count($playlistTransfer->playlists)
+                $playlistTransfer->playlists_processed === $playlistTransfer->playlists()->count()
             ) {
                 // oh god no
                 $playlistTransfer->status = PlaylistTransfer::STATUS_COMPLETED;
