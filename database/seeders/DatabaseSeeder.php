@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@gmail.com',
         ]);
 
-        Playlist::factory(15)->create(['user_id' => $user->getKey()]);
+        $playlists = Playlist::factory(15)->create(['user_id' => $user->getKey()]);
 
         $user->playlistTransfers()
             ->create(
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
                     'destination' => 'tidal',
                     'status'      => 'completed'
                 ])
-            );
+            )->playlists()->saveMany($playlists);
 
         $user->playlistTransfers()
             ->create(
@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
                     'destination' => 'tidal',
                     'status'      => 'in_progress'
                 ])
-            );
+            )->playlists()->saveMany($playlists);
 
         $user->playlistTransfers()
             ->create(
@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
                     'destination' => 'tidal',
                     'status'      => 'failed'
                 ])
-            );
+            )->playlists()->saveMany($playlists);
 
         $user->playlistTransfers()
             ->create(
@@ -53,6 +53,6 @@ class DatabaseSeeder extends Seeder
                     'destination' => 'tidal',
                     'status'      => 'pending'
                 ])
-            );
+            )->playlists()->saveMany($playlists);
     }
 }

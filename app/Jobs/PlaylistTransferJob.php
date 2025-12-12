@@ -37,7 +37,7 @@ class PlaylistTransferJob implements ShouldQueue
                     ))->toArray(),
             )->catch(function (Throwable $throwable) {
                 Log::error(
-                    "A failure occurred with a playlist transfer ",
+                    "A failure occurred with a playlist transfer: {$throwable->getMessage()}",
                     [
                         'exception' => [
                             'message' => $throwable->getMessage(),
