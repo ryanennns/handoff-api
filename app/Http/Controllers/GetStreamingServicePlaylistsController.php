@@ -32,7 +32,7 @@ class GetStreamingServicePlaylistsController extends Controller
         );
 
         return response()->json([
-            'playlists' => $api->getPlaylists(),
+            'playlists' => collect($api->getPlaylists())->map(fn($dto) => $dto->toArray()),
         ]);
     }
 }

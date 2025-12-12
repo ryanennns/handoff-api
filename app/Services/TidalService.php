@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\ApiClients\TidalApi;
+use App\Helpers\StreamingServicePlaylistDto;
 use App\Helpers\TrackDto;
 use App\Models\OauthCredential;
 use Carbon\Carbon;
@@ -86,18 +87,16 @@ class TidalService extends StreamingService
         );
 
         return collect(Arr::get($playlistResponse->json(), 'data', []))
-            ->map(function ($item) {
-                return [
-                    'id'               => Arr::get($item, 'id'),
-                    'name'             => Arr::get($item, 'attributes.name'),
-                    'tracks'           => [],
-                    'owner'            => [
-                        'display_name' => Arr::get($item, 'attributes.relationships.owners.data', ''),
-                    ],
-                    'number_of_tracks' => Arr::get($item, 'attributes.numberOfItems'),
-                    'image_uri'        => null,
-                ];
-            })->toArray();
+            ->map(fn($item) => new StreamingServicePlaylistDto([
+                'id'               => Arr::get($item, 'id'),
+                'name'             => Arr::get($item, 'attributes.name'),
+                'tracks'           => [],
+                'owner'            => [
+                    'display_name' => Arr::get($item, 'attributes.relationships.owners.data', ''),
+                ],
+                'number_of_tracks' => Arr::get($item, 'attributes.numberOfItems'),
+                'image_uri'        => null,
+            ]))->toArray();
     }
 
     public function getPlaylistTracks(string $playlistId): array

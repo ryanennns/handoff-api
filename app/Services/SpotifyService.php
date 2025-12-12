@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\StreamingServicePlaylistDto;
 use App\Helpers\TrackDto;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -62,7 +63,7 @@ class SpotifyService extends StreamingService
         $response = $this->makeRequest('/me/playlists');
 
         return collect(Arr::get($response->json(), 'items'))
-            ->map(fn($item) => [
+            ->map(fn($item) => new StreamingServicePlaylistDto([
                 'id'               => Arr::get($item, 'id'),
                 'name'             => Arr::get($item, 'name'),
                 'tracks'           => Arr::get($item, 'tracks.href'),
@@ -72,7 +73,7 @@ class SpotifyService extends StreamingService
                 ],
                 'number_of_tracks' => Arr::get($item, 'tracks.total'),
                 'image_uri'        => Arr::get($item, 'images.0.url'),
-            ])->toArray();
+            ]))->toArray();
     }
 
     public function getPlaylistTracks(string $playlistId): array

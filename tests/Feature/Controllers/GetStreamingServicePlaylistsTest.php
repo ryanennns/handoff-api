@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Controllers;
 
+use App\Helpers\StreamingServicePlaylistDto;
 use App\Models\OauthCredential;
 use App\Models\User;
 use App\Services\TidalService;
@@ -26,7 +27,7 @@ class GetStreamingServicePlaylistsTest extends TestCase
         $this->app->bind(TidalService::class, fn() => $mockService);
 
         $getPlaylistsResponse = [
-            [
+            new StreamingServicePlaylistDto([
                 'id'               => 'playlist-1',
                 'name'             => 'My Playlist 1',
                 'tracks'           => [
@@ -38,8 +39,8 @@ class GetStreamingServicePlaylistsTest extends TestCase
                 ],
                 'number_of_tracks' => 2,
                 'image_uri'        => null,
-            ],
-            [
+            ]),
+            new StreamingServicePlaylistDto([
                 'id'               => 'playlist-2',
                 'name'             => 'My Playlist 2',
                 'tracks'           => [
@@ -51,7 +52,7 @@ class GetStreamingServicePlaylistsTest extends TestCase
                 ],
                 'number_of_tracks' => 2,
                 'image_uri'        => null,
-            ],
+            ]),
         ];
         $mockService->shouldReceive('getPlaylists')
             ->andReturn($getPlaylistsResponse);
