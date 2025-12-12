@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
+use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Tests\TestCase;
 
@@ -15,9 +16,9 @@ class GoogleOauthControllerTest extends TestCase
 
     public function test_it_creates_user_if_none_exists()
     {
-        $this->markTestSkipped("Test code or tested code did not remove its own error handlers");
+        $this->markTestSkipped('Test code or tested code did not remove its own exception handlers');
 
-        $mockGoogleProvider = \Mockery::mock(GoogleProvider::class);
+        $mockGoogleProvider = Mockery::mock(GoogleProvider::class);
         $mockGoogleProvider->shouldReceive('user')->andReturn(new class {
             public string $token = 'mock_token';
             public string $refreshToken = 'mock_refresh_token';

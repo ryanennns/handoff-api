@@ -57,11 +57,6 @@ class PlaylistTransferJobTest extends TestCase
         ]);
     }
 
-    public function test_it_updates_status_to_in_progress_when_running()
-    {
-        $this->markTestIncomplete();
-    }
-
     public function test_it_updates_status_to_failed_on_failure()
     {
         $this->sourceMock->shouldReceive('getPlaylistTracks')
