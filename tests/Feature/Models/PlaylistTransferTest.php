@@ -4,8 +4,8 @@ namespace Feature\Models;
 
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
-use App\Models\Track;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class PlaylistTransferTest extends TestCase
@@ -20,6 +20,7 @@ class PlaylistTransferTest extends TestCase
         $playlist = Playlist::factory()->create(['user_id' => $this->user()->getKey()]);
         $playlistTransfer->playlists()->save($playlist);
 
-        $this->assertCount(1, $playlistTransfer->playlists()->get());
+        $playlistTransfer = PlaylistTransfer::query()->first();
+        $this->assertCount(1, $playlistTransfer->playlists);
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Models\OauthCredential;
+use App\Models\Playlist;
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -28,5 +29,13 @@ abstract class TestCase extends BaseTestCase
         ]);
 
         return $this->user;
+    }
+
+    public function newPlaylist(array $props = []): Playlist
+    {
+        return Playlist::factory()->create([
+            'user_id' => $this->user()->getKey(),
+            ...$props,
+        ]);
     }
 }

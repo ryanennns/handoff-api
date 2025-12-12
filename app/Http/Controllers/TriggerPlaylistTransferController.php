@@ -27,7 +27,6 @@ class TriggerPlaylistTransferController extends Controller
         $playlistTransfer = $user->playlistTransfers()->create([
             'source'      => $source,
             'destination' => $destination,
-            'playlists'   => $playlists,
             'status'      => PlaylistTransfer::STATUS_PENDING,
         ]);
 

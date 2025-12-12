@@ -88,6 +88,7 @@ class PlaylistTransferJobTest extends TestCase
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
         ]);
+        $pt->playlists()->save($this->newPlaylist());
         (new PlaylistTransferJob($pt))->handle();
         $pt->refresh();
         $this->assertEquals(PlaylistTransfer::STATUS_COMPLETED, $pt->status);
@@ -101,10 +102,10 @@ class PlaylistTransferJobTest extends TestCase
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 'asdf', 'name' => 'snickers']
-            ]
         ]);
+        $job->playlists()->save(
+            $this->newPlaylist()
+        );
         (new PlaylistTransferJob($job))->handle();
         $job->refresh();
         $this->assertEquals(1, $job->playlists_processed);
@@ -118,10 +119,10 @@ class PlaylistTransferJobTest extends TestCase
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 'asdf', 'name' => 'snickers']
-            ]
         ]);
+
+        $job->playlists()->save($this->newPlaylist());
+
         (new PlaylistTransferJob($job))->handle();
         $this->assertDatabaseHas('tracks', [
             'isrc_ids' => json_encode(['USUM72005901']),
@@ -156,10 +157,8 @@ class PlaylistTransferJobTest extends TestCase
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 'asdf', 'name' => 'snickers']
-            ]
         ]);
+        $pt->playlists()->save($this->newPlaylist());
         (new PlaylistTransferJob($pt))->handle();
 
         $this->assertDatabaseHas('tracks', [
@@ -204,15 +203,13 @@ class PlaylistTransferJobTest extends TestCase
 
         $this->destinationMock->shouldReceive('addTracksToPlaylist');
 
-        $job = PlaylistTransfer::factory()->create([
+        $pt = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 'asdf', 'name' => 'snickers']
-            ]
         ]);
-        (new PlaylistTransferJob($job))->handle();
+        $pt->playlists()->save($this->newPlaylist());
+        (new PlaylistTransferJob($pt))->handle();
 
         $this->assertDatabaseHas('tracks', [
             'isrc_ids'   => json_encode(['USUM72005901']),
@@ -220,28 +217,6 @@ class PlaylistTransferJobTest extends TestCase
                 'spotify' => $spotifyUuid,
                 'tidal'   => $tidalUuid,
             ]),
-        ]);
-    }
-
-    public function test_it_creates_playlist_models()
-    {
-        $this->happyPathApiMocks();
-
-        $job = PlaylistTransfer::factory()->create([
-            'source'      => SpotifyService::PROVIDER,
-            'destination' => TidalService::PROVIDER,
-            'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 1, 'name' => 'snickers1'],
-            ],
-        ]);
-        (new PlaylistTransferJob($job))->handle();
-
-        $this->assertDatabaseHas('playlists', [
-            'name'      => 'snickers1',
-            'service'   => SpotifyService::PROVIDER,
-            'remote_id' => "1",
-            'user_id'   => $this->user()->getKey(),
         ]);
     }
 
@@ -273,50 +248,21 @@ class PlaylistTransferJobTest extends TestCase
         $this->destinationMock->shouldReceive('addTracksToPlaylist')
             ->once();
 
-        $job = PlaylistTransfer::factory()->create([
+        $pt = PlaylistTransfer::factory()->create([
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
             'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 1, 'name' => 'snickers1'],
-            ],
         ]);
-        (new PlaylistTransferJob($job))->handle();
+        $pt->playlists()->save($this->newPlaylist([
+            'name' => 'snickers',
+        ]));
+        (new PlaylistTransferJob($pt))->handle();
 
         $playlist = Playlist::query()
-            ->where(['name' => 'snickers1'])
+            ->where(['name' => 'snickers'])
             ->firstOrFail();
 
         $this->assertNotEmpty($playlist->tracks()->get());
-    }
-
-    public function test_it_creates_one_playlist_if_transferred_twice()
-    {
-        $this->happyPathApiMocks();
-        $job = PlaylistTransfer::factory()->create([
-            'source'      => SpotifyService::PROVIDER,
-            'destination' => TidalService::PROVIDER,
-            'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 1, 'name' => 'snickers1'],
-            ],
-        ]);
-        (new PlaylistTransferJob($job))->handle();
-
-        $this->assertDatabaseCount('playlists', 1);
-
-        $this->happyPathApiMocks();
-        $job = PlaylistTransfer::factory()->create([
-            'source'      => SpotifyService::PROVIDER,
-            'destination' => TidalService::PROVIDER,
-            'user_id'     => $this->user()->getKey(),
-            'playlists'   => [
-                ['id' => 1, 'name' => 'snickers1'],
-            ],
-        ]);
-        (new PlaylistTransferJob($job))->handle();
-
-        $this->assertDatabaseCount('playlists', 1);
     }
 
     public function happyPathApiMocks(): void

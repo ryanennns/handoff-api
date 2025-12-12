@@ -99,10 +99,13 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $trackModel->remote_ids,
                 $remoteIds,
             );
-            $trackModel->isrc_ids = array_merge(
-                $trackModel->isrc_ids,
-                $isrc
+            $trackModel->isrc_ids = array_unique(
+                array_merge(
+                    $trackModel->isrc_ids,
+                    $isrc
+                )
             );
+
             $trackModel->save();
 
             return $trackModel;

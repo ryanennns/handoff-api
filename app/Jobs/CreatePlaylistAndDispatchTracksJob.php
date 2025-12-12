@@ -20,7 +20,7 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
 
     public function __construct(
         private readonly PlaylistTransfer $playlistTransfer,
-        private readonly array            $playlist
+        private readonly Playlist         $playlist
     )
     {
     }
@@ -30,14 +30,6 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
         try {
             $source = $this->playlistTransfer->sourceApi();
             $destination = $this->playlistTransfer->destinationApi();
-
-            $playlistModel = Playlist::query()->firstOrCreate([
-                'service'   => $source::PROVIDER,
-                'remote_id' => $this->playlist['id'],
-            ], [
-                'user_id' => $this->playlistTransfer->user_id,
-                'name'    => $this->playlist['name'],
-            ]);
 
             $tracks = $source->getPlaylistTracks($this->playlist['id']);
             $destinationPlaylistId = $destination->createPlaylist($this->playlist['name']);
@@ -58,14 +50,14 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
                     ...collect($tracks)
                         ->map(fn($t) => new CreateAndSearchForTracksJob(
                             $this->playlistTransfer,
-                            $playlistModel,
+                            $this->playlist,
                             $t,
                         ))
                         ->toArray(),
                     new PopulatePlaylistWithTracksJob(
                         $this->playlistTransfer,
                         $destinationPlaylistId,
-                        $playlistModel
+                        $this->playlist
                     ),
                     new IncrementPlaylistsProcessedJob($this->playlistTransfer),
                 ]

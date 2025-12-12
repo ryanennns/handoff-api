@@ -16,7 +16,7 @@ class PlaylistTransfer extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['playlists' => 'json'];
+    protected $with = ['playlists'];
 
     public const string STATUS_PENDING = 'pending';
     public const string STATUS_IN_PROGRESS = 'in_progress';

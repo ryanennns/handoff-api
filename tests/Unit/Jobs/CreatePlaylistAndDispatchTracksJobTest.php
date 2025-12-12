@@ -4,6 +4,7 @@ namespace Unit\Jobs;
 
 use App\Helpers\TrackDto;
 use App\Jobs\CreatePlaylistAndDispatchTracksJob;
+use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Services\SpotifyService;
 use App\Services\TidalService;
@@ -63,7 +64,7 @@ class CreatePlaylistAndDispatchTracksJobTest extends TestCase
 
         new CreatePlaylistAndDispatchTracksJob(
             $playlistTransfer,
-            ['name' => 'snickers', 'id' => '123']
+            Playlist::factory()->create(['user_id' => $this->user()->getKey()]),
         )->handle();
 
         $playlistTransfer->refresh();
@@ -114,7 +115,7 @@ class CreatePlaylistAndDispatchTracksJobTest extends TestCase
 
         new CreatePlaylistAndDispatchTracksJob(
             $playlistTransfer,
-            ['name' => 'snickers', 'id' => '123']
+            Playlist::factory()->create(['user_id' => $this->user()->getKey()]),
         )->handle();
 
         $playlistTransfer->refresh();
