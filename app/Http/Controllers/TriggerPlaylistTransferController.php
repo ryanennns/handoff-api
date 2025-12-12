@@ -31,6 +31,17 @@ class TriggerPlaylistTransferController extends Controller
             'status'      => PlaylistTransfer::STATUS_PENDING,
         ]);
 
+        collect($playlists)
+            ->each(function ($playlist) use ($playlistTransfer, $source, $user) {
+                $playlist = $user->playlists()->create([
+                    'service'   => $source,
+                    'name'      => $playlist['name'],
+                    'remote_id' => $playlist['id'],
+                ]);
+
+                $playlistTransfer->playlists()->save($playlist);
+            });
+
         PlaylistTransferJob::dispatch($playlistTransfer);
 
         return response()->json([
