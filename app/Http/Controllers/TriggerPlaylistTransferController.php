@@ -32,10 +32,11 @@ class TriggerPlaylistTransferController extends Controller
 
         collect($playlists)
             ->each(function ($playlist) use ($playlistTransfer, $source, $user) {
-                $playlist = $user->playlists()->create([
-                    'service'   => $source,
-                    'name'      => $playlist['name'],
+                $playlist = $user->playlists()->updateOrCreate([
                     'remote_id' => $playlist['id'],
+                    'service' => $source,
+                ], [
+                    'name'    => $playlist['name'],
                 ]);
 
                 $playlistTransfer->playlists()->save($playlist);

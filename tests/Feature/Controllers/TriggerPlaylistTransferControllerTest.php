@@ -103,25 +103,28 @@ class TriggerPlaylistTransferControllerTest extends TestCase
 
     public function test_it_updates_existing_playlist_if_already_exists()
     {
+        Bus::fake();
+
         $this->assertDatabaseCount('playlists', 0);
         $this->assertDatabaseCount('playlist_transfers', 0);
 
+        $playlist = [
+            'id'               => $this->faker->uuid(),
+            'name'             => $this->faker->word(),
+            'tracks'           => 'asdf',
+            'owner'            => [
+                'id'   => $this->user()->getKey(),
+                'name' => 'ronald mcdonanld',
+            ],
+            'number_of_tracks' => 5,
+            'image_uri'        => $this->faker->url(),
+        ];
         $this->actingAs($this->user())
             ->post('api/playlist-transfers/trigger', [
                 'source'      => SpotifyService::PROVIDER,
                 'destination' => TidalService::PROVIDER,
                 'playlists'   => [
-                    [
-                        'id'               => $this->faker->uuid(),
-                        'name'             => $this->faker->word(),
-                        'tracks'           => 'asdf',
-                        'owner'            => [
-                            'id'   => $this->user()->getKey(),
-                            'name' => 'ronald mcdonanld',
-                        ],
-                        'number_of_tracks' => 5,
-                        'image_uri'        => $this->faker->url(),
-                    ]
+                    $playlist
                 ],
             ])->assertCreated()->assertJsonStructure([
                 'message',
@@ -140,17 +143,7 @@ class TriggerPlaylistTransferControllerTest extends TestCase
                 'source'      => SpotifyService::PROVIDER,
                 'destination' => TidalService::PROVIDER,
                 'playlists'   => [
-                    [
-                        'id'               => $this->faker->uuid(),
-                        'name'             => $this->faker->word(),
-                        'tracks'           => 'asdf',
-                        'owner'            => [
-                            'id'   => $this->user()->getKey(),
-                            'name' => 'ronald mcdonanld',
-                        ],
-                        'number_of_tracks' => 5,
-                        'image_uri'        => $this->faker->url(),
-                    ]
+                    $playlist
                 ],
             ])->assertCreated()->assertJsonStructure([
                 'message',
