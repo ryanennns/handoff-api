@@ -31,8 +31,8 @@ class CreatePlaylistAndDispatchTracksJob implements ShouldQueue
             $source = $this->playlistTransfer->sourceApi();
             $destination = $this->playlistTransfer->destinationApi();
 
-            $tracks = $source->getPlaylistTracks($this->playlist['id']);
-            $destinationPlaylistId = $destination->createPlaylist($this->playlist['name']);
+            $tracks = $source->getPlaylistTracks($this->playlist->remote_id);
+            $destinationPlaylistId = $destination->createPlaylist($this->playlist->name);
 
             if (!$destinationPlaylistId) {
                 Log::error("Failed to create playlist $destinationPlaylistId", [
