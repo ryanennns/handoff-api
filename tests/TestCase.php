@@ -22,6 +22,11 @@ abstract class TestCase extends BaseTestCase
             'user_id'  => $this->user->getKey(),
         ]);
 
+        OauthCredential::factory()->create([
+            'provider' => 'spotify',
+            'user_id'  => $this->user->getKey(),
+        ]);
+
         return $this->user;
     }
 }

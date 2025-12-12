@@ -70,7 +70,6 @@ class CreateAndSearchForTracksJob implements ShouldQueue
                 $this->playlist->tracks()->save($model);
             }
         } catch (Throwable $e) {
-            $this->fail($e);
         }
     }
 

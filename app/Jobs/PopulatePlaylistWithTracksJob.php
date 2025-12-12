@@ -8,7 +8,6 @@ use App\Models\Track;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class PopulatePlaylistWithTracksJob implements ShouldQueue
 {
@@ -27,21 +26,24 @@ class PopulatePlaylistWithTracksJob implements ShouldQueue
 
     public function handle(): void
     {
-        $tracksToAdd = $this->playlistModel
-            ->tracks()
-            ->get()
-            ->filter(fn(Track $t) => array_key_exists(
-                $this->playlistTransfer->destination,
-                $t->remote_ids,
-            ))
-            ->map(fn(Track $track) => $track->toDto($this->playlistTransfer->destination))
-            ->toArray();
+        try {
+            $tracksToAdd = $this->playlistModel
+                ->tracks()
+                ->get()
+                ->filter(fn(Track $t) => array_key_exists(
+                    $this->playlistTransfer->destination,
+                    $t->remote_ids,
+                ))
+                ->map(fn(Track $track) => $track->toDto($this->playlistTransfer->destination))
+                ->toArray();
 
-        $this->playlistTransfer
-            ->destinationApi()
-            ->addTracksToPlaylist(
-                $this->playlistId,
-                $tracksToAdd,
-            );
+            $this->playlistTransfer
+                ->destinationApi()
+                ->addTracksToPlaylist(
+                    $this->playlistId,
+                    $tracksToAdd,
+                );
+        } catch (\Exception $e) {
+        }
     }
 }
