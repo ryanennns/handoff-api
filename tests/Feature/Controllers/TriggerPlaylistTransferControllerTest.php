@@ -18,6 +18,23 @@ class TriggerPlaylistTransferControllerTest extends TestCase
     use RefreshDatabase;
     use WithFaker;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->playlistPayload = [
+            'id'               => $this->faker->uuid(),
+            'name'             => $this->faker->word(),
+            'tracks'           => 'asdf',
+            'owner'            => [
+                'id'   => $this->user()->getKey(),
+                'name' => 'ronald mcdonanld',
+            ],
+            'number_of_tracks' => 5,
+            'image_uri'        => $this->faker->url(),
+        ];
+    }
+
     public function test_it_dispatches_playlist_transfer_job()
     {
         Bus::fake();
@@ -25,19 +42,7 @@ class TriggerPlaylistTransferControllerTest extends TestCase
         $this->actingAs($this->user())->post('api/playlist-transfers/trigger', [
             'source'      => SpotifyService::PROVIDER,
             'destination' => TidalService::PROVIDER,
-            'playlists'   => [
-                [
-                    'id'               => $this->faker->uuid(),
-                    'name'             => $this->faker->word(),
-                    'tracks'           => 'asdf',
-                    'owner'            => [
-                        'id'   => $this->user()->getKey(),
-                        'name' => 'ronald mcdonanld',
-                    ],
-                    'number_of_tracks' => 5,
-                    'image_uri'        => $this->faker->url(),
-                ]
-            ],
+            'playlists'   => [$this->playlistPayload],
         ])->assertCreated()->assertJsonStructure([
             'message',
             'data' => [
@@ -69,19 +74,7 @@ class TriggerPlaylistTransferControllerTest extends TestCase
             ->post('api/playlist-transfers/trigger', [
                 'source'      => SpotifyService::PROVIDER,
                 'destination' => TidalService::PROVIDER,
-                'playlists'   => [
-                    [
-                        'id'               => $this->faker->uuid(),
-                        'name'             => $this->faker->word(),
-                        'tracks'           => 'asdf',
-                        'owner'            => [
-                            'id'   => $this->user()->getKey(),
-                            'name' => 'ronald mcdonanld',
-                        ],
-                        'number_of_tracks' => 5,
-                        'image_uri'        => $this->faker->url(),
-                    ]
-                ],
+                'playlists'   => [$this->playlistPayload],
             ])->assertCreated()->assertJsonStructure([
                 'message',
                 'data' => [
@@ -108,23 +101,12 @@ class TriggerPlaylistTransferControllerTest extends TestCase
         $this->assertDatabaseCount('playlists', 0);
         $this->assertDatabaseCount('playlist_transfers', 0);
 
-        $playlist = [
-            'id'               => $this->faker->uuid(),
-            'name'             => $this->faker->word(),
-            'tracks'           => 'asdf',
-            'owner'            => [
-                'id'   => $this->user()->getKey(),
-                'name' => 'ronald mcdonanld',
-            ],
-            'number_of_tracks' => 5,
-            'image_uri'        => $this->faker->url(),
-        ];
         $this->actingAs($this->user())
             ->post('api/playlist-transfers/trigger', [
                 'source'      => SpotifyService::PROVIDER,
                 'destination' => TidalService::PROVIDER,
                 'playlists'   => [
-                    $playlist
+                    $this->playlistPayload
                 ],
             ])->assertCreated()->assertJsonStructure([
                 'message',
@@ -143,7 +125,7 @@ class TriggerPlaylistTransferControllerTest extends TestCase
                 'source'      => SpotifyService::PROVIDER,
                 'destination' => TidalService::PROVIDER,
                 'playlists'   => [
-                    $playlist
+                    $this->playlistPayload
                 ],
             ])->assertCreated()->assertJsonStructure([
                 'message',

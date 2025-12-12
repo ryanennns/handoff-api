@@ -12,7 +12,6 @@ return new class extends Migration {
             $table->uuid('playlist_id');
             $table->uuid('playlist_transfer_id');
             $table->unique(['playlist_id', 'playlist_transfer_id']);
-            $table->timestamps();
         });
     }
 
