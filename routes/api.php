@@ -42,19 +42,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', GetPlaylistTransfersController::class)->name('index');
     });
 
+    Route::prefix('playlists')->name('playlists.')->group(function () {
+        Route::get('/', GetPlaylistsController::class)->name('index');
+    });
+
+    Route::prefix('oauth-credentials')->name('oauth-credentials.')->group(function () {
+        Route::delete('/', DeleteOauthCredentialController::class)
+            ->name('delete');
+    });
+
     Route::get('/services', GetActiveServicesController::class)->name('services');
 
     Route::get('/streaming-service-playlists', GetStreamingServicePlaylistsController::class)->name('playlists');
-
-    Route::get('/playlists', GetPlaylistsController::class)
-        ->name('playlists.index');
-
-    Route::prefix('oauth-credentials')
-        ->name('oauth-credentials')
-        ->group(function () {
-            Route::delete('/', DeleteOauthCredentialController::class)
-                ->name('.delete');
-        });
 });
 
 Route::get('/dumping-ground', function () {
