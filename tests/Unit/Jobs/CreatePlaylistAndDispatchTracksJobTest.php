@@ -1,6 +1,6 @@
 <?php
 
-namespace Unit\Jobs;
+namespace Tests\Unit\Jobs;
 
 use App\Helpers\TrackDto;
 use App\Jobs\CreatePlaylistAndDispatchTracksJob;

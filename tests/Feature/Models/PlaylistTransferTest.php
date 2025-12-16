@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Models;
+namespace Tests\Feature\Models;
 
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
