@@ -9,6 +9,11 @@ abstract class StreamingService
 {
     public const PROVIDER = 'generic';
 
+    public const PROVIDERS = [
+        'tidal',
+        'spotify',
+    ];
+
     public function __construct(protected readonly OauthCredential $oauthCredential)
     {
         if ($oauthCredential->provider !== static::PROVIDER) {
@@ -25,7 +30,7 @@ abstract class StreamingService
     /** @returns TrackDto[] */
     abstract public function getPlaylistTracks(string $playlistId): array;
 
-    abstract public function createPlaylist(string $name): string | false;
+    abstract public function createPlaylist(string $name): string|false;
 
     abstract public function addTrackToPlaylist(string $playlistId, TrackDto $track): bool;
 

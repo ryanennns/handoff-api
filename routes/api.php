@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DeleteOauthCredentialController;
 use App\Http\Controllers\GeneralOauthController;
 use App\Http\Controllers\GetActiveServicesController;
 use App\Http\Controllers\GetPlaylistsController;
@@ -47,6 +48,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/playlists', GetPlaylistsController::class)
         ->name('playlists.index');
+
+    Route::prefix('oauth-credentials')
+        ->name('oauth-credentials')
+        ->group(function () {
+            Route::delete('/', DeleteOauthCredentialController::class)
+                ->name('.delete');
+        });
 });
 
 Route::get('/dumping-ground', function () {
