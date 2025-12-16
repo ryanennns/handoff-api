@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\OauthCredential;
 use App\Models\Playlist;
 use App\Models\PlaylistTransfer;
 use App\Models\User;
@@ -54,5 +55,8 @@ class DatabaseSeeder extends Seeder
                     'status'      => 'pending'
                 ])
             )->playlists()->saveMany($playlists);
+
+        $user->oauthCredentials()->create(OauthCredential::factory()->raw(['provider' => 'tidal']));
+        $user->oauthCredentials()->create(OauthCredential::factory()->raw(['provider' => 'spotify']));
     }
 }
